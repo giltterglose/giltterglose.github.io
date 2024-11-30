@@ -29,17 +29,40 @@
 
   
   
-    <meta name="description" content="Java虚拟机基础">
+    <meta name="description" content="Java虚拟机基础1.1 Java虚拟机认识jvm本质上是一个运行在计算机上的程序，他的职责是运行Java字节码文件  jvm功能 解释和运行：对字节码文件中的指令，实时解释成机器码，让计算机执行。 内存管理：自动为对象、方法等分配内存；自动垃圾回收机制，回收不再使用的对象。 即时编译：对热点代码进行优化，提升运行效率。 即时编译的功能：  性能不如C&#x2F;C++，但是Java字节码可以运行">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Java虚拟机基础篇">
 <meta property="og:url" content="http://example.com/2024/11/29/Java%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%9F%BA%E7%A1%80%E7%AF%87/index.html">
 <meta property="og:site_name" content="改bug的龙哥的博客">
-<meta property="og:description" content="Java虚拟机基础">
+<meta property="og:description" content="Java虚拟机基础1.1 Java虚拟机认识jvm本质上是一个运行在计算机上的程序，他的职责是运行Java字节码文件  jvm功能 解释和运行：对字节码文件中的指令，实时解释成机器码，让计算机执行。 内存管理：自动为对象、方法等分配内存；自动垃圾回收机制，回收不再使用的对象。 即时编译：对热点代码进行优化，提升运行效率。 即时编译的功能：  性能不如C&#x2F;C++，但是Java字节码可以运行">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411301528622.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411301528551.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411301528953.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411301528993.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411301529506.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411301542716.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411302142658.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411302142623.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411302142633.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411302142592.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411302142643.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411302142673.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411302142110.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411302142061.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411302142147.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411302142178.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411302142292.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411302142429.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411302142555.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411302142643.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411302142734.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411302142799.png">
 <meta property="article:published_time" content="2024-11-29T06:01:37.000Z">
-<meta property="article:modified_time" content="2024-11-29T06:03:41.537Z">
+<meta property="article:modified_time" content="2024-11-30T13:43:20.209Z">
 <meta property="article:author" content="改bug的龙哥">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411301528622.png">
   
   
     <link rel="alternate" href="/atom.xml" title="改bug的龙哥的博客" type="application/atom+xml">
@@ -181,7 +204,7 @@
       <div class="article-date">
   <a href="/2024/11/29/Java%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%9F%BA%E7%A1%80%E7%AF%87/" class="article-date-link" data-aos="zoom-in">
     <time datetime="2024-11-29T06:01:37.000Z" itemprop="datePublished">2024-11-29</time>
-    <time style="display: none;" id="post-update-time">2024-11-29</time>
+    <time style="display: none;" id="post-update-time">2024-11-30</time>
   </a>
 </div>
 
@@ -194,7 +217,94 @@
     <div class="e-content article-entry" itemprop="articleBody">
       
       
-        <h2 id="Java虚拟机基础"><a href="#Java虚拟机基础" class="headerlink" title="Java虚拟机基础"></a>Java虚拟机基础</h2>
+        <h2 id="Java虚拟机基础"><a href="#Java虚拟机基础" class="headerlink" title="Java虚拟机基础"></a>Java虚拟机基础</h2><h3 id="1-1-Java虚拟机认识"><a href="#1-1-Java虚拟机认识" class="headerlink" title="1.1 Java虚拟机认识"></a>1.1 Java虚拟机认识</h3><p>jvm本质上是一个运行在计算机上的程序，他的职责是运行Java字节码文件</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411301528622.png" alt="image-20241128110546583"></p>
+<p>jvm功能</p>
+<p>解释和运行：对字节码文件中的指令，实时解释成机器码，让计算机执行。</p>
+<p>内存管理：自动为对象、方法等分配内存；自动垃圾回收机制，回收不再使用的对象。</p>
+<p>即时编译：对热点代码进行优化，提升运行效率。</p>
+<p>即时编译的功能：</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411301528551.png" alt="image-20241128110738059"></p>
+<p>性能不如C&#x2F;C++，但是Java字节码可以运行在不同的jvm上，jvm需要实时解释虚拟机指令，不做任何优化性能不如C&#x2F;C++。</p>
+<p>即时编译的</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411301528953.png" alt="image-20241128110931241"></p>
+<p>常见的虚拟机</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411301528993.png" alt="image-20241128111019167"></p>
+<p>常见JVM：Java虚拟机规范</p>
+<p>jvm规范由Oracle指定，内容包含了Java虚拟机在设计和实现时需要遵守的规范，主要包含class字节码文件的定义、类和接口的加载和初始化、指令集等内容。</p>
+<p>jvm规范是对虚拟机设计的要求，而不是对Java设计的要求，也就是说虚拟机可以运行在其他语言比如groovy，scala生成的class字节码文件上。</p>
+<h3 id="1-2-Java虚拟机构成"><a href="#1-2-Java虚拟机构成" class="headerlink" title="1.2 Java虚拟机构成"></a>1.2 Java虚拟机构成</h3><p>JVM由类加载器，运行时数据区（JVM管理的内存），执行引擎（即时编译器、解释器、垃圾回收器等），本地接口。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411301529506.png" alt="image-20241128113209041"></p>
+<h4 id="1-2-1-字节码文件"><a href="#1-2-1-字节码文件" class="headerlink" title="1.2.1 字节码文件"></a>1.2.1 字节码文件</h4><p>字节码文件主要有基本信息，常量池，字段，方法，属性组成</p>
+<p>基本信息：包含魔数，字节码文件对应的Java版本号、访问标识（public，final等）父类和接口</p>
+<p>魔数</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411301542716.png" alt="image-20241130154216680"></p>
+<p>文件时没有办法通过文件扩展名来确定文件类型的，文件扩展名可以随意修改，不影响文件内容。</p>
+<p>软件使用文件的头几个字节（文件头）去校验文件的类型，如果软件不支持该种文件类型就报错。</p>
+<p>Java字节码文件中，将文件头称为magic魔数。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411302142658.png" alt="image-20241130154605022"></p>
+<p>主副版本号</p>
+<p>主副版本号指的是编译字节码文件的JDK版本号，主版本号用来标识大版本号，JDK1.0-1.1使用了45.0-45.3,JDK1.2是46之后每升级一个大版本就加1；副版本号是当主版本号相同时作为区分不同版本的标识，一般只需要关心主版本号。</p>
+<p>版本号的作用主要是判断当前字节码的运行版本和运行时的JDK是否兼容。</p>
+<p>主版本号不兼容错误：主要有两种解决方案（升级JDK版本，将第三方依赖的版本号降低或者更换依赖，以满足JDK版本要求），但是低版本可以运行在高版本的Java环境中。一般不采用升级jdk版本。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411302142623.png" alt="image-20241130162816687"></p>
+<h4 id="1-2-2-常量池"><a href="#1-2-2-常量池" class="headerlink" title="1.2.2 常量池"></a>1.2.2 常量池</h4><p>常量池保存了字符串常量、类或者接口名、字段名，主要在字节码中的指令使用。</p>
+<p>作用：避免相同的内容重复定义，节省空间。</p>
+<p>常量池中的数据都有一个编号，编号从1开始。在字段或者字节码指令中通过编号可以快速找到对应的数据。</p>
+<p>字节码指令中通过编号引用到常量池的过程称为引用。</p>
+<p>字段：当前类或者接口声明的字段信息。</p>
+<p>方法：当前类或者接口声明方法信息字节码指令。</p>
+<p>属性：类的属性，比如字节码文件名，内部类的列表等。</p>
+<h4 id="1-2-3-方法"><a href="#1-2-3-方法" class="headerlink" title="1.2.3 方法"></a>1.2.3 方法</h4><p>字节码中的方法区域是存放字节码指令的核心位置，字节码指令的内容存放在方法的Code属性中。</p>
+<p>操作数栈是临时存放数据的地方，局部变量表是存放方法中的局部变量的位置。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411302142633.png" alt="image-20241130164057640"></p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411302142592.png" alt="image-20241130164717345"></p>
+<h3 id="1-3-类生命周期"><a href="#1-3-类生命周期" class="headerlink" title="1.3 类生命周期"></a>1.3 类生命周期</h3><h4 id="1-3-1-加载阶段"><a href="#1-3-1-加载阶段" class="headerlink" title="1.3.1 加载阶段"></a>1.3.1 加载阶段</h4><p>描述了一个类加载、使用和卸载的过程。</p>
+<p>生命周期概述：</p>
+<p>加载、连接、初始化、使用和卸载。</p>
+<p>加载阶段第一步是类加载器根据类的全限定名通过不同的渠道以二进制流的方式获取字节码信息。程序员可以使用Java代码拓展的不同渠道。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411302142643.png" alt="image-20241130204952064"></p>
+<p>类加载器在加载完类之后，Java虚拟机会将字节码中的信息保存在方法区中。</p>
+<p>类加载器在加载完类之后，Java虚拟机会将字节码中的信息保存到内存的方法区中。生成一个instanceKlass对象，保存类所有信息，里面还包含实现特定功能比如多态等信息。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411302142673.png" alt="image-20241130205236626"></p>
+<p>Java虚拟机还会在堆中生成一份与方法区中数据类似的java.lang.Class对象。（作用是在Java代码中获取类的信息以及存储静态字段的数据，JDK8及之后）</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411302142110.png" alt="image-20241130205735494"></p>
+<p>对于开发者来说，只需要访问堆中的class对象而不需要访问方法区中的所有信息。（这样Java虚拟机就能很好控制开发者访问数据的范围）</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411302142061.png" alt="image-20241130210000569"></p>
+<p>类的生命周期：加载阶段-查看内存中的对象</p>
+<h4 id="1-3-2-连接阶段"><a href="#1-3-2-连接阶段" class="headerlink" title="1.3.2 连接阶段"></a>1.3.2 连接阶段</h4><p>验证（验证内容是否满足Java虚拟机规范）、准备：给静态变量赋值初值，解析：将常量池中的符号引用替换成指向内存的直接引用。</p>
+<p>验证：文件格式验证，开头是否以0xCAFEBABE，主次版本号是否满足当前Java虚拟机版本要求。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411302142147.png" alt="image-20241130210953246"></p>
+<p>元信息验证：比如类必须有父类（super不能为空）</p>
+<p>验证程序执行指令的语义，比如方法内的指令执行到一半强行跳转到其他方法中去。</p>
+<p>符号引用验证，例如是否访问了其他类中private方法等。</p>
+<p>版本号的检测</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411302142178.png" alt="image-20241130211644763"></p>
+<p>主版本号不能比运行环境主版本号高，主版本号如果相同，那么副版本号也不能超过。</p>
+<p>准备阶段为静态变量分配内存并设置初始值</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411302142292.png" alt="image-20241130211816349"></p>
+<p>准备阶段只会给静态变量赋初始值，而每一种基本数据类型和引用数据类型都有其初始值。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411302142429.png" alt="image-20241130211946333"></p>
+<p>final修饰的基本数据类型的静态变量，准备阶段直接会将代码中的值进行赋值。</p>
+<p>连接阶段的解析：解析阶段主要是把常量池中的符号引用替换成直接引用。符号引用就是在字节码文件中使用的编号来访问常量池中的内容。</p>
+<p>直接引用不在使用编号，而是使用内存中的地址进行访问具体的数据。</p>
+<h4 id="1-3-3-初始化阶段"><a href="#1-3-3-初始化阶段" class="headerlink" title="1.3.3 初始化阶段"></a>1.3.3 初始化阶段</h4><p>准备阶段为静态变量分配内存并设置为初值。</p>
+<p>初始化阶段会执行静态代码块中的代码，并为静态变量赋值。<br>初始化阶段会执行字节码文件中cliniti墙部分的字节码指令。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411302142555.png" alt="image-20241130212726845"></p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411302142643.png" alt="image-20241130212740781"></p>
+<p>clinit方法中的执行顺序与Java中编写的顺序是一致的。</p>
+<p>以下几种方式会导致类的初始化：</p>
+<p>1.访问一个类的静态变量或者静态方法，注意变量是fial修饰的并且等号右边是常量不会触发初始化。<br>2.调用Class.forName(String className)。<br>3.new一个该类的对象时。<br>4.执行Main方法的当前类。</p>
+<p>clinit指令在特定情况下不会出现，比如：如下几种情况是不会进行初始化指令执行的。</p>
+<p>无静态代码块且无静态变量赋值语句。<br>有静态变量的声明，但是没有赋值语句。<br>静态变量的定义使用final关键字，这类变量会在准备阶段直接进行初始化。</p>
+<p>直接访问父类的静态变量，不会触发子类的初始化；子类的初始化clinit调用之前，会先调用父类的client初始化方法。</p>
+<p>数组的创建不会导致数组中元素的类进行初始化。</p>
+<p>final修饰的变量如果赋值的内容需要执行指令才能得出结果，会执行clinit方法进行初始化。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411302142734.png" alt="image-20241130214014348"></p>
+<p>类的生命周期。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202411302142799.png" alt="image-20241130214055763"></p>
+<p>1.静态变量的定义使用finals关键字，这类变量会在准备阶段直接进行初始化(除非要执行方法)。<br>2.直接访问父类的静态变量，不会触发子类的初始化。子类的初始化ciit调用之前，会先调用父类的cinit初始化方法。</p>
+
       
     </div>
     <footer class="article-footer">
@@ -228,7 +338,7 @@
   <h3 class="toc-title">文章目录</h3>
   <div class="sidebar-toc-wrapper toc-div-class" >
       
-        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Java%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%9F%BA%E7%A1%80"><span class="toc-number">1.</span> <span class="toc-text">Java虚拟机基础</span></a></li></ol>
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Java%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%9F%BA%E7%A1%80"><span class="toc-number">1.</span> <span class="toc-text">Java虚拟机基础</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-Java%E8%99%9A%E6%8B%9F%E6%9C%BA%E8%AE%A4%E8%AF%86"><span class="toc-number">1.1.</span> <span class="toc-text">1.1 Java虚拟机认识</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-Java%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%9E%84%E6%88%90"><span class="toc-number">1.2.</span> <span class="toc-text">1.2 Java虚拟机构成</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-2-1-%E5%AD%97%E8%8A%82%E7%A0%81%E6%96%87%E4%BB%B6"><span class="toc-number">1.2.1.</span> <span class="toc-text">1.2.1 字节码文件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-2-2-%E5%B8%B8%E9%87%8F%E6%B1%A0"><span class="toc-number">1.2.2.</span> <span class="toc-text">1.2.2 常量池</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-2-3-%E6%96%B9%E6%B3%95"><span class="toc-number">1.2.3.</span> <span class="toc-text">1.2.3 方法</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E7%B1%BB%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F"><span class="toc-number">1.3.</span> <span class="toc-text">1.3 类生命周期</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-3-1-%E5%8A%A0%E8%BD%BD%E9%98%B6%E6%AE%B5"><span class="toc-number">1.3.1.</span> <span class="toc-text">1.3.1 加载阶段</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-3-2-%E8%BF%9E%E6%8E%A5%E9%98%B6%E6%AE%B5"><span class="toc-number">1.3.2.</span> <span class="toc-text">1.3.2 连接阶段</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-3-3-%E5%88%9D%E5%A7%8B%E5%8C%96%E9%98%B6%E6%AE%B5"><span class="toc-number">1.3.3.</span> <span class="toc-text">1.3.3 初始化阶段</span></a></li></ol></li></ol></li></ol>
       
   </div>
 </div>
@@ -319,10 +429,10 @@
     
       <div>
         <span class="icon-brush"></span>
-        6
+        2.2k
         &nbsp;|&nbsp;
         <span class="icon-coffee"></span>
-        00:01
+        00:07
       </div>
     
     
@@ -352,7 +462,7 @@
   <h3 class="toc-title">文章目录</h3>
   <div class="sidebar-toc-wrapper toc-div-class" >
       
-        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Java%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%9F%BA%E7%A1%80"><span class="toc-number">1.</span> <span class="toc-text">Java虚拟机基础</span></a></li></ol>
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Java%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%9F%BA%E7%A1%80"><span class="toc-number">1.</span> <span class="toc-text">Java虚拟机基础</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-Java%E8%99%9A%E6%8B%9F%E6%9C%BA%E8%AE%A4%E8%AF%86"><span class="toc-number">1.1.</span> <span class="toc-text">1.1 Java虚拟机认识</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-Java%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%9E%84%E6%88%90"><span class="toc-number">1.2.</span> <span class="toc-text">1.2 Java虚拟机构成</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-2-1-%E5%AD%97%E8%8A%82%E7%A0%81%E6%96%87%E4%BB%B6"><span class="toc-number">1.2.1.</span> <span class="toc-text">1.2.1 字节码文件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-2-2-%E5%B8%B8%E9%87%8F%E6%B1%A0"><span class="toc-number">1.2.2.</span> <span class="toc-text">1.2.2 常量池</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-2-3-%E6%96%B9%E6%B3%95"><span class="toc-number">1.2.3.</span> <span class="toc-text">1.2.3 方法</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E7%B1%BB%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F"><span class="toc-number">1.3.</span> <span class="toc-text">1.3 类生命周期</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-3-1-%E5%8A%A0%E8%BD%BD%E9%98%B6%E6%AE%B5"><span class="toc-number">1.3.1.</span> <span class="toc-text">1.3.1 加载阶段</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-3-2-%E8%BF%9E%E6%8E%A5%E9%98%B6%E6%AE%B5"><span class="toc-number">1.3.2.</span> <span class="toc-text">1.3.2 连接阶段</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-3-3-%E5%88%9D%E5%A7%8B%E5%8C%96%E9%98%B6%E6%AE%B5"><span class="toc-number">1.3.3.</span> <span class="toc-text">1.3.3 初始化阶段</span></a></li></ol></li></ol></li></ol>
       
   </div>
 </div>
