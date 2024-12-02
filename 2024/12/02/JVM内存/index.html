@@ -14,6 +14,7 @@
   
   
   <title>
+    JVM内存 |
     
     改bug的龙哥的博客
   </title>
@@ -30,7 +31,7 @@
   
     <meta name="description" content="1.5 JVM内存1.5.1 程序计数器 上图是程序计数器的结构。 程序计数器的作用：将二进制字节码-&gt;JVM指令，提交给解释器，然后转换成机器码，随后提交给CPU。 作用：相当于记住下一条JVM指令的执行地址。 特点：是线程私有的，不会存在内存溢出。 在加载阶段，虚拟机将字节码文件中的指令读取到内存之后，会将原文件中的偏移量转换成内存地址。每一条字节码指令都会拥有一个内存地址。 程序计数器">
 <meta property="og:type" content="article">
-<meta property="og:title" content="改bug的龙哥的博客">
+<meta property="og:title" content="JVM内存">
 <meta property="og:url" content="http://example.com/2024/12/02/JVM%E5%86%85%E5%AD%98/index.html">
 <meta property="og:site_name" content="改bug的龙哥的博客">
 <meta property="og:description" content="1.5 JVM内存1.5.1 程序计数器 上图是程序计数器的结构。 程序计数器的作用：将二进制字节码-&gt;JVM指令，提交给解释器，然后转换成机器码，随后提交给CPU。 作用：相当于记住下一条JVM指令的执行地址。 特点：是线程私有的，不会存在内存溢出。 在加载阶段，虚拟机将字节码文件中的指令读取到内存之后，会将原文件中的偏移量转换成内存地址。每一条字节码指令都会拥有一个内存地址。 程序计数器">
@@ -52,8 +53,8 @@
 <meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412022113426.png">
 <meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412022113478.png">
 <meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412022113488.png">
-<meta property="article:published_time" content="2024-12-02T13:13:43.487Z">
-<meta property="article:modified_time" content="2024-12-02T13:13:46.961Z">
+<meta property="article:published_time" content="2024-12-02T13:23:00.000Z">
+<meta property="article:modified_time" content="2024-12-02T13:23:52.377Z">
 <meta property="article:author" content="改bug的龙哥">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412022113111.png">
@@ -167,7 +168,7 @@
 <header id="header">
   
     
-      <img fetchpriority="high" src="/images/banner.webp" alt="">
+      <img fetchpriority="high" src="/images/banner.webp" alt="JVM内存">
     
   
   <div id="header-outer">
@@ -176,7 +177,7 @@
         
         
           <a href="/" id="logo">
-            <h1 data-aos="slide-up">改bug的龙哥的博客</h1>
+            <h1 data-aos="slide-up">JVM内存</h1>
           </a>
         
       
@@ -197,7 +198,7 @@
     <div class="article-meta">
       <div class="article-date">
   <a href="/2024/12/02/JVM%E5%86%85%E5%AD%98/" class="article-date-link" data-aos="zoom-in">
-    <time datetime="2024-12-02T13:13:43.487Z" itemprop="datePublished">2024-12-02</time>
+    <time datetime="2024-12-02T13:23:00.000Z" itemprop="datePublished">2024-12-02</time>
     <time style="display: none;" id="post-update-time">2024-12-02</time>
   </a>
 </div>
