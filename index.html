@@ -249,10 +249,47 @@ Java为了简化对象的释放，引入了自动的垃圾回收（GC）机制�
     <div class="post-wrapper">
   <div class="post-wrap-left" data-aos="fade-up">
     
-      <a class="post-link" href="/2024/12/01/%E8%99%9A%E6%8B%9F%E6%9C%BA%E4%B9%8B%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8/" aria-label="Java虚拟机类加载器"></a>
+      <a class="post-link" href="/2024/12/02/Java%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6/" aria-label="JVM垃圾回收"></a>
     
     
     <div class="post-cover-left">
+      
+        
+        
+          <img data-src="/images/banner.webp" data-sizes="auto" alt="JVM垃圾回收" class="lazyload">
+        
+      
+    </div>
+    <div class="post-info">
+      <div class="post-meta">
+        <span><span class="icon-calendar"></span>2024-12-02</span>
+        <span><span class="icon-pencil"></span>2.8k 字</span>
+        <span><span class="icon-clock"></span>9 分钟</span>
+      </div>
+      <h2 class="post-title">JVM垃圾回收</h2>
+      <article class="post-article">
+        
+          Java垃圾回收1.6.4 垃圾回收算法垃圾回收步骤：找到内存中存活的对象；释放不再存活的对象内存，使得程序能够再次利用这样的空间。
+四种不同的垃圾回收算法：
+
+Java垃圾回收过程会通过单独的GC线程来完成，但是不管使用哪一种GC算法，都会有部分阶段需要停止所有的用户线程。这个过程被称之为Stop The World简称STW,如果STW时间过长则会影响用户的使用。
+
+评价标准：
+吞吐量：吞吐量指的是cpu用于执行用户代码的时间与cpu总执行时间的比值。吞吐量&amp;#x3D;执行用户代码时间&amp;#x2F;（执行用户代码时间+GC时间），该值也大，吞吐量越高，垃圾回收效率就越高。
+最大暂停时间：最大
+        
+      </article>
+    </div>
+  </div>
+</div>
+  
+    <div class="post-wrapper">
+  <div class="post-wrap-right" data-aos="fade-up">
+    
+      <a class="post-link" href="/2024/12/01/%E8%99%9A%E6%8B%9F%E6%9C%BA%E4%B9%8B%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8/" aria-label="Java虚拟机类加载器"></a>
+    
+    
+    <div class="post-cover-right">
       
         
         
@@ -286,12 +323,12 @@ JDK8及之前的版本类加载器中的种类
 </div>
   
     <div class="post-wrapper">
-  <div class="post-wrap-right" data-aos="fade-up">
+  <div class="post-wrap-left" data-aos="fade-up">
     
       <a class="post-link" href="/2024/11/29/Java%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%9F%BA%E7%A1%80%E7%AF%87/" aria-label="Java虚拟机基础篇"></a>
     
     
-    <div class="post-cover-right">
+    <div class="post-cover-left">
       
         
         
@@ -346,7 +383,7 @@ jvm规范由Oracle指定，内容包含了Jav
 <div class="sidebar-state">
   <div class="sidebar-state-article">
     <div>文章</div>
-    <div class="sidebar-state-number">4</div>
+    <div class="sidebar-state-number">5</div>
   </div>
   <div class="sidebar-state-category">
     <div>分类</div>
@@ -419,10 +456,10 @@ jvm规范由Oracle指定，内容包含了Jav
     
       <div>
         <span class="icon-brush"></span>
-        11.3k
+        14k
         &nbsp;|&nbsp;
         <span class="icon-coffee"></span>
-        00:37
+        00:46
       </div>
     
     
@@ -456,7 +493,7 @@ jvm规范由Oracle指定，内容包含了Jav
 <div class="sidebar-state">
   <div class="sidebar-state-article">
     <div>文章</div>
-    <div class="sidebar-state-number">4</div>
+    <div class="sidebar-state-number">5</div>
   </div>
   <div class="sidebar-state-category">
     <div>分类</div>
