@@ -286,10 +286,47 @@ Java垃圾回收过程会通过单独的GC线程来完成，但是不管使用�
     <div class="post-wrapper">
   <div class="post-wrap-right" data-aos="fade-up">
     
-      <a class="post-link" href="/2024/12/01/%E8%99%9A%E6%8B%9F%E6%9C%BA%E4%B9%8B%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8/" aria-label="Java虚拟机类加载器"></a>
+      <a class="post-link" href="/2024/12/02/MySQL%E4%BA%8B%E5%8A%A1/" aria-label="MySQL事务"></a>
     
     
     <div class="post-cover-right">
+      
+        
+        
+          <img data-src="/images/banner.webp" data-sizes="auto" alt="MySQL事务" class="lazyload">
+        
+      
+    </div>
+    <div class="post-info">
+      <div class="post-meta">
+        <span><span class="icon-calendar"></span>2024-12-02</span>
+        <span><span class="icon-pencil"></span>452 字</span>
+        <span><span class="icon-clock"></span>1 分钟</span>
+      </div>
+      <h2 class="post-title">MySQL事务</h2>
+      <article class="post-article">
+        
+          1. 事务事务是一组操作的集合，它是一个不可分割的单位，事务会将所有的操作作为一个整体一起向系统提交或者撤销操作的请求，即这些操作要么同时成功，要么同时失败。
+默认MySQL的事务就是自动提交的，也就是说，当执行一条DML语句，MySQL会立即隐式提交事务。
+案例：如果是在转账业务，如果是不足，需要进行回滚。
+1.1 事务操作查看&amp;#x2F;设置事务提交方式：select @@autocommit&amp;#x2F;set @@autocommit
+提交事务：commit
+回滚事务：rollback（出错时需要回滚）
+开启事务：start transaction&amp;#x2F;begin
+1.2 事务的四
+        
+      </article>
+    </div>
+  </div>
+</div>
+  
+    <div class="post-wrapper">
+  <div class="post-wrap-left" data-aos="fade-up">
+    
+      <a class="post-link" href="/2024/12/01/%E8%99%9A%E6%8B%9F%E6%9C%BA%E4%B9%8B%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8/" aria-label="Java虚拟机类加载器"></a>
+    
+    
+    <div class="post-cover-left">
       
         
         
@@ -323,12 +360,12 @@ JDK8及之前的版本类加载器中的种类
 </div>
   
     <div class="post-wrapper">
-  <div class="post-wrap-left" data-aos="fade-up">
+  <div class="post-wrap-right" data-aos="fade-up">
     
       <a class="post-link" href="/2024/11/29/Java%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%9F%BA%E7%A1%80%E7%AF%87/" aria-label="Java虚拟机基础篇"></a>
     
     
-    <div class="post-cover-left">
+    <div class="post-cover-right">
       
         
         
@@ -383,15 +420,15 @@ jvm规范由Oracle指定，内容包含了Jav
 <div class="sidebar-state">
   <div class="sidebar-state-article">
     <div>文章</div>
-    <div class="sidebar-state-number">5</div>
+    <div class="sidebar-state-number">6</div>
   </div>
   <div class="sidebar-state-category">
     <div>分类</div>
-    <div class="sidebar-state-number">1</div>
+    <div class="sidebar-state-number">2</div>
   </div>
   <div class="sidebar-state-tag">
     <div>标签</div>
-    <div class="sidebar-state-number">1</div>
+    <div class="sidebar-state-number">2</div>
   </div>
 </div>
 <div class="sidebar-social">
@@ -456,10 +493,10 @@ jvm规范由Oracle指定，内容包含了Jav
     
       <div>
         <span class="icon-brush"></span>
-        14k
+        14.5k
         &nbsp;|&nbsp;
         <span class="icon-coffee"></span>
-        00:46
+        00:47
       </div>
     
     
@@ -493,15 +530,15 @@ jvm规范由Oracle指定，内容包含了Jav
 <div class="sidebar-state">
   <div class="sidebar-state-article">
     <div>文章</div>
-    <div class="sidebar-state-number">5</div>
+    <div class="sidebar-state-number">6</div>
   </div>
   <div class="sidebar-state-category">
     <div>分类</div>
-    <div class="sidebar-state-number">1</div>
+    <div class="sidebar-state-number">2</div>
   </div>
   <div class="sidebar-state-tag">
     <div>标签</div>
-    <div class="sidebar-state-number">1</div>
+    <div class="sidebar-state-number">2</div>
   </div>
 </div>
 <div class="sidebar-social">
