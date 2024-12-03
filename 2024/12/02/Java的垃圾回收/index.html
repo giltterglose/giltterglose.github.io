@@ -1,0 +1,790 @@
+
+  <!DOCTYPE html>
+  <html lang="zh-CN"  >
+  <head>
+  <meta charset="utf-8">
+  
+
+  
+
+  
+
+  
+  <script>window.icon_font = '4552607_tq6stt6tcg';window.clipboard_tips = {"success":"复制成功(*^▽^*)","fail":"复制失败 (ﾟ⊿ﾟ)ﾂ","copyright":{"enable":false,"count":50,"content":"本文版权：本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！"}};</script>
+  
+  
+  <title>
+    Java垃圾回收 |
+    
+    改bug的龙哥的博客
+  </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin><link rel="preload" as="style" href="https://fonts.googleapis.com/css?family=Mulish:400,400italic,700,700italic%7CNoto%20Serif%20SC:400,400italic,700,700italic&display=swap"><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Mulish:400,400italic,700,700italic%7CNoto%20Serif%20SC:400,400italic,700,700italic&display=swap" media="print" onload="this.media&#x3D;&#39;all&#39;">
+  
+    <link rel="preload" href="//at.alicdn.com/t/c/font_4552607_tq6stt6tcg.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  
+  
+    
+<link rel="stylesheet" href="/css/loader.css">
+
+  
+  
+    <meta name="description" content="1.6 Java的垃圾回收1.6.1 自动垃圾回收C&#x2F;C++语言中，没有自动垃圾回收机制，如果一个对象不再使用，需要手动释放，否则会出现内存泄漏。我们称这种释放对象的过程叫做垃圾回收，而需要程序员编写代码进行回收的方式叫做手动回收。 内存泄漏指的是不在使用的对象在系统中未被回收，内存泄漏的积累可能会导致内存溢出。 Java为了简化对象的释放，引入了自动的垃圾回收（GC）机制，通过垃圾回收">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java垃圾回收">
+<meta property="og:url" content="http://example.com/2024/12/02/Java%E7%9A%84%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6/index.html">
+<meta property="og:site_name" content="改bug的龙哥的博客">
+<meta property="og:description" content="1.6 Java的垃圾回收1.6.1 自动垃圾回收C&#x2F;C++语言中，没有自动垃圾回收机制，如果一个对象不再使用，需要手动释放，否则会出现内存泄漏。我们称这种释放对象的过程叫做垃圾回收，而需要程序员编写代码进行回收的方式叫做手动回收。 内存泄漏指的是不在使用的对象在系统中未被回收，内存泄漏的积累可能会导致内存溢出。 Java为了简化对象的释放，引入了自动的垃圾回收（GC）机制，通过垃圾回收">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830449.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830344.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830372.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830398.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830446.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830405.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830002.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830060.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830219.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830292.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830419.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830655.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830872.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830984.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830082.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830183.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830298.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830428.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830477.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830808.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830946.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830992.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830112.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830292.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830142.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830466.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830536.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830607.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830862.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830931.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830252.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830477.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830514.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830583.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830989.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830964.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830106.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830141.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830244.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830349.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830558.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830672.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830758.png">
+<meta property="article:published_time" content="2024-12-02T13:23:00.000Z">
+<meta property="article:modified_time" content="2024-12-03T10:32:23.834Z">
+<meta property="article:author" content="改bug的龙哥">
+<meta property="article:tag" content="JVM">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830449.png">
+  
+  
+    <link rel="alternate" href="/atom.xml" title="改bug的龙哥的博客" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/images/favicon.ico">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  <link rel="preload" href="https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  
+  
+  
+  
+    
+<script src="https://npm.webcache.cn/pace-js@1.2.4/pace.min.js" integrity="sha384-k6YtvFUEIuEFBdrLKJ3YAUbBki333tj1CSUisai5Cswsg9wcLNaPzsTHDswp4Az8" crossorigin="anonymous"></script>
+
+  
+  
+    
+<link rel="stylesheet" href="https://npm.webcache.cn/@reimujs/aos@0.1.0/dist/aos.css">
+
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+  <body>
+    
+  <div id='loader'>
+    <div class="loading-left-bg loading-bg"></div>
+    <div class="loading-right-bg loading-bg"></div>
+    <div class="spinner-box">
+      <div class="loading-taichi">
+        <svg width="150" height="150" viewBox="0 0 1024 1024" class="icon" version="1.1" xmlns="https://www.w3.org/2000/svg" shape-rendering="geometricPrecision">
+          <path d="M303.5 432A80 80 0 0 1 291.5 592A80 80 0 0 1 303.5 432z" fill="#ff5252" />
+          <path d="M512 65A447 447 0 0 1 512 959L512 929A417 417 0 0 0 512 95A417 417 0 0 0 512 929L512 959A447 447 0 0 1 512 65z 
+         M512 95A417 417 0 0 1 929 512A208.5 208.5 0 0 1 720.5 720.5L720.5 592A80 80 0 0 0 720.5 432A80 80 0 0 0 720.5 592L720.5 720.5A208.5 208.5 0 0 1 512 512A208.5 208.5 0 0 0 303.5 303.5A208.5 208.5 0 0 0 95 512A417 417 0 0 1 512 95z" fill="#ff5252" />
+        </svg>
+      </div>
+      <div class="loading-word">少女祈祷中...</div>
+    </div>
+  </div>
+  </div>
+  <script>
+    var time = null;
+    var startLoading = () => {
+      time = Date.now();
+      document.getElementById('loader').classList.remove("loading");
+    }
+    var endLoading = () => {
+      if (!time) {
+        document.body.style.overflow = 'auto';
+        document.getElementById('loader').classList.add("loading");
+      } else {
+        if (Date.now() - time > 500) {
+          time = null;
+          document.body.style.overflow = 'auto';
+          document.getElementById('loader').classList.add("loading");
+        } else {
+          setTimeout(endLoading, 500 - (Date.now() - time));
+          time = null;
+        }
+      }
+    }
+    window.addEventListener('DOMContentLoaded', endLoading);
+    document.getElementById('loader').addEventListener('click', endLoading);
+  </script>
+
+<div id="copy-tooltip" style="pointer-events: none; opacity: 0; transition: all 0.2s ease; position: fixed;top: 50%;left: 50%;z-index: 999;transform: translate(-50%, -50%);color: white;background: rgba(0, 0, 0, 0.5);padding: 10px 15px;border-radius: 10px;">
+</div>
+
+
+    <div id="container">
+      <div id="wrap">
+        <div id="header-nav">
+  <nav id="main-nav">
+    
+      <span class="main-nav-link-wrap">
+        <div class="main-nav-icon icon-taichi"></div>
+        <a class="main-nav-link" href="/">首页</a>
+      </span>
+    
+      <span class="main-nav-link-wrap">
+        <div class="main-nav-icon icon-taichi"></div>
+        <a class="main-nav-link" href="/archives">归档</a>
+      </span>
+    
+      <span class="main-nav-link-wrap">
+        <div class="main-nav-icon icon-taichi"></div>
+        <a class="main-nav-link" href="/about">关于</a>
+      </span>
+    
+      <span class="main-nav-link-wrap">
+        <div class="main-nav-icon icon-taichi"></div>
+        <a class="main-nav-link" href="/friend">友链</a>
+      </span>
+    
+    <a id="main-nav-toggle" class="nav-icon"></a>
+  </nav>
+  <nav id="sub-nav">
+    
+      <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS 订阅" target="_blank"></a>
+    
+    
+    
+  </nav>
+</div>
+<header id="header">
+  
+    
+      <img fetchpriority="high" src="/images/banner.webp" alt="Java垃圾回收">
+    
+  
+  <div id="header-outer">
+    <div id="header-title">
+      
+        
+        
+          <a href="/" id="logo">
+            <h1 data-aos="slide-up">Java垃圾回收</h1>
+          </a>
+        
+      
+      
+        
+        <h2 id="subtitle-wrap" data-aos="slide-down">
+          
+        </h2>
+      
+    </div>
+  </div>
+</header>
+
+        <div id="content">
+          
+          <section id="main"><article id="post-Java的垃圾回收" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-inner" data-aos="fade-up">
+    <div class="article-meta">
+      <div class="article-date">
+  <a href="/2024/12/02/Java%E7%9A%84%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6/" class="article-date-link" data-aos="zoom-in">
+    <time datetime="2024-12-02T13:23:00.000Z" itemprop="datePublished">2024-12-02</time>
+    <time style="display: none;" id="post-update-time">2024-12-03</time>
+  </a>
+</div>
+
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Java%E8%99%9A%E6%8B%9F%E6%9C%BA/" data-aos="zoom-in">Java虚拟机</a>
+  </div>
+
+
+    </div>
+    <div class="hr-line"></div>
+    
+
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+      
+        <h1 id="1-6-Java的垃圾回收"><a href="#1-6-Java的垃圾回收" class="headerlink" title="1.6 Java的垃圾回收"></a>1.6 Java的垃圾回收</h1><h2 id="1-6-1-自动垃圾回收"><a href="#1-6-1-自动垃圾回收" class="headerlink" title="1.6.1 自动垃圾回收"></a>1.6.1 自动垃圾回收</h2><p>C&#x2F;C++语言中，没有自动垃圾回收机制，如果一个对象不再使用，需要手动释放，否则会出现内存泄漏。我们称这种释放对象的过程叫做垃圾回收，而需要程序员编写代码进行回收的方式叫做手动回收。</p>
+<p>内存泄漏指的是不在使用的对象在系统中未被回收，内存泄漏的积累可能会导致内存溢出。</p>
+<p>Java为了简化对象的释放，引入了自动的垃圾回收（GC）机制，通过垃圾回收器来对不再使用的对象完成自动的回收，垃圾回收器主要负责对堆上的内存进行回收。其他很多现代语言都拥有自己的垃圾回收器。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830449.png" alt="image-20241203143224675"></p>
+<p>自动垃圾回收：自动根据对象是否使用由虚拟机来回收对象。有点：降低程序员实现难度、降低对象回收bug的可能性；缺点：程序员无法控制内存回收的及时性。</p>
+<p>手动垃圾回收：由程序员编程实现对象的删除。优点：回收及时性高，由程序员把控回收的时机；缺点：编写不当容易出现悬空指针、重复释放、内存泄漏。</p>
+<h2 id="1-6-2-方法区的回收"><a href="#1-6-2-方法区的回收" class="headerlink" title="1.6.2 方法区的回收"></a>1.6.2 方法区的回收</h2><p>线程不共享的部分，都是伴随着线程的创建而创建，线程的销毁而销毁。而方法的栈帧在执行完方法之后就会自动弹出栈并释放掉对应的内存。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830344.png" alt="image-20241203143732075"></p>
+<p>●方法区中能回收的内容主要就是不再使用的类。<br>判定一个类可以被卸载。需要同时满足下面三个条件：<br>1、此类所有实例对象都已经被回收，在堆中不存在任何该类的实例对象以及子类对象。<br>2、加载该类的类加载器已经被回收。<br>3、该类对应的java.lang.Class对象没有在任何地方被引用。</p>
+<p>方法区的回收-手动触发回收：如果需要手动触发垃圾回收，可以调用system.gc方法。</p>
+<p>调用System,gc()方法并不一定会立即回收垃圾，仅仅是向Java虚拟机发送一个垃圾回收的请求，具体是否需要执行垃圾回收Java虚拟机会自行判断。</p>
+<p>开发中此类场景一般很少出现，主要在如OSG引、JSP的热部署等应用场景中。每个jsp文件对应一个唯一的类加载器，当一个jsp文件修改了，就直接卸载这个jsp类加载器。重新创建类加载器，重新加载jSp文件。</p>
+<h2 id="1-6-3-堆回收"><a href="#1-6-3-堆回收" class="headerlink" title="1.6.3 堆回收"></a>1.6.3 堆回收</h2><p>引用技术法：</p>
+<p>Java中的对象是否能被回收，是根据对象是否被引用来决定的。如果对象被引用了，说明该对象还在被使用，不能被回收。</p>
+<p>只有无法通过引用获取到对象时，该对象才能被回收。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830372.png" alt="image-20241203145523599"></p>
+<p>如何判断堆上的对象有没有被引用：引用计数法会为每个对象维护一个引用计数器，当对象被引用时+1，取消引用-1</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830398.png" alt="image-20241203145732528"></p>
+<p>优点简单：C++中智能指针就采用了该方法，但是缺点明显：</p>
+<p>1.每次引用和取消写引用都需要维护计数器，对系统性能会有一定的影响<br>2.存在循环引用问题，所谓循环引用就是当A引用B,B同时引用A时会出现对象无法回收的问题。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830446.png" alt="image-20241203145835997"></p>
+<p>如果想要查看垃圾回收的信息，可以使用-verbose:gc参数。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830405.png" alt="image-20241203145946290"></p>
+<p>可达性分析算法：</p>
+<p>Java使用的是可达性分析算法来判断对象是否可以被回收。可达性分析将对象分为两类：垃圾回收的根对象（GC Root）和普通对象，对象与对象之间存在引用关系。</p>
+<p>下图中A到B再到C和D,形成了一个引用链，可达性分析算法指的是如果从某个到GC Root对象是可达的，对象就不可被回收。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830002.png" alt="image-20241203151037326"></p>
+<p>GC Root对象：线程Thread对象、系统类加载器加载的java.lang.Class对象、监视器对象，用来保存同步锁synchronized关键字持有的对象、本地方法调用时使用的全局变量。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830060.png" alt="image-20241203151531136"></p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830219.png" alt="image-20241203151554035"></p>
+<p>五种对象引用</p>
+<p>软引用、弱引用、虚引用、终结器引用。</p>
+<p>强引用指的是可达性算法。</p>
+<p>软引用：如果一个对象只有软引用关联到它，当程序内存不足时，就会将软引用的数据进行回收。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830292.png" alt="image-20241203152908171"></p>
+<p>软引用的执行过程如下：</p>
+<p>将对象使用软引用包装起来，new softreference</p>
+<p>内存不足时，虚拟机尝试进行垃圾回收</p>
+<p>如果垃圾回收仍然不能解决内存不足的问题，回收软引用中的对象</p>
+<p>如果依然内存不足，抛出OutOfMemory异常。</p>
+<p>软引用中的对象如果在内存不足时候回收，softreference对象本身也要被回收，如何知道那些软引用对象回收？</p>
+<p>SoftReference提供了一套队列机制：<br>1、软引用创建时，通过构造器传入引用队列<br>2、在软引用中包含的对象被回收时，该软引用对象会被放入引用队列<br>3、通过代码遍历引用队列，将SoftReference的强引用删除</p>
+<p>软引用也可以使用继承自SoftReference类的方式来实现，StudentRef类就是一个软引用对象。<br>通过构造器传入软引用包含的对象，以及引用队列。</p>
+<p>弱引用：</p>
+<p>弱引用的整体机制和软引用基本一致，区别在于弱引用包含的对象在垃圾回收时，不管内存够不够都会直接被回收。<br>在JDK1.2版之后提供了WeakReference类来实现弱引用，弱引用主要在ThreadLocal中使用。<br>弱引用对象本身也可以使用引用队列进行回收。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830419.png" alt="image-20241203154317481"></p>
+<p>虚引用和终结器引用（开发中不适用）</p>
+<p>虚引用也叫幽灵引用&#x2F;幻影引用，不能通过虚引用对象获取到包含的对象。虚引用唯一的用途是当对象被垃圾回收器回收时可以接收到对应的通知。Java中使用PhantomReference实现了虚引用，直接内存中为了及时知道直接内存对象不再使用，从而回收内存，使用了虚引用来实现。</p>
+<p>终结器引用指的是在对象需要被回收时，对象将会被放置在Finalizer类中的引用队列中，并在稍后由一条由FinalizerThread线程从队列中获取对象，然后执行对象的finalize方法。在这个过程中可以在finalize方法中再将自身对象使用强引用关联上，但是不建议这样做，如果耗时过长会影响其他对象的回收。</p>
+<h2 id="1-6-4-垃圾回收算法"><a href="#1-6-4-垃圾回收算法" class="headerlink" title="1.6.4 垃圾回收算法"></a>1.6.4 垃圾回收算法</h2><p>垃圾回收步骤：找到内存中存活的对象；释放不再存活的对象内存，使得程序能够再次利用这样的空间。</p>
+<p>四种不同的垃圾回收算法：</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830655.png" alt="image-20241203155822010"></p>
+<p>Java垃圾回收过程会通过单独的GC线程来完成，但是不管使用哪一种GC算法，都会有部分阶段需要停止所有的用户线程。这个过程被称之为Stop The World简称STW,如果STW时间过长则会影响用户的使用。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830872.png" alt="image-20241203155949421"></p>
+<p>评价标准：</p>
+<p>吞吐量：吞吐量指的是cpu用于执行用户代码的时间与cpu总执行时间的比值。吞吐量&#x3D;执行用户代码时间&#x2F;（执行用户代码时间+GC时间），该值也大，吞吐量越高，垃圾回收效率就越高。</p>
+<p>最大暂停时间：最大暂停时间指的是所有在垃圾回收过程中的STW时间最大值。比如如下的图中，黄色部分的STW就是最大暂停时间，显而易见上面的图比下面的图拥有更少的最大暂停时间。最大暂停时间越短，用户使用系统时受到的影响就越短。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830984.png" alt="image-20241203160414726"></p>
+<p>堆使用效率：不同垃圾回收算法，对堆内存的使用方式是不同的。比如标记清除算法，可以使用完整的堆内存。而复制算<br>法会将堆内存一分为二，每次只能使用一半内存。从堆使用效率上来说，标记清除算法要优于复制算法。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830082.png" alt="image-20241203160446698"></p>
+<p>三者不可兼得，一般来说，堆内存越大，最大暂停时间就越长。想要减少最大暂停时间，就会降低吞吐量。</p>
+<p>标记清除算法</p>
+<p>1,标记阶段，将所有存活的对象进行标记。Jva中使用可达性分析算法，从GC Root开始通过引用链遍历出所有存活对象。<br>2清除阶段，从内存中删除没有被标记也就是非存活对象。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830183.png" alt="image-20241203162043124"></p>
+<p>优点：实现简单，只需要在第一阶段给每个对象维护标志位，第二阶段删除对象即可。</p>
+<p>缺点：碎片化问题：由于内存是连续的，所以在对象被删除之后，内存中会出现很多细小可用的内存单元。如果我们需要的是一个比较大的空间，很有可能这些内存单元的大小过小无法进行分配。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830298.png" alt="image-20241203162231700"></p>
+<p>分配速度慢：由于内存碎片的存在，需要维护一个空闲链表，极有可能发生每次需要遍历到链表的最后才能获得合适的内存空间。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830428.png" alt="image-20241203162403651"></p>
+<p>复制算法核心思想：</p>
+<p>准备两块空间的from空间和to空间，每次在对象分配的阶段，创建对象。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830477.png" alt="image-20241203162447769"></p>
+<p>GC阶段开始，将GC Root关联的对象，搬运到To空间。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830808.png" alt="image-20241203162530216"></p>
+<p>清理from空间，并把名称互换。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830946.png" alt="image-20241203162605480"></p>
+<p>优缺点：</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830992.png" alt="image-20241203162632652"></p>
+<p>标记整理算法：也叫标记压缩算法，是对标记清理算法中容易产生内存碎片问题的一种解决方案。</p>
+<p>核心思想分为两个阶段：<br>1.标记阶段，将所有存活的对象进行标记。Java中使用可达性分析算法，从GC Root开始通过引用链遍历出所有存活对象。<br>2.整理阶段，将存活对象移动到堆的一端。清理掉存活对象的内存空间。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830112.png" alt="image-20241203162749951"></p>
+<p>优缺点：</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830292.png" alt="image-20241203162808519"></p>
+<p>分代GC算法</p>
+<p>现代优秀的垃圾回收算法，会将上述描述的垃圾回收算法组合进行使用，其中应用最广的就是分代垃圾回收算法(Generational GC)。<br>分代垃圾回收将整个内存区域划分为年轻代和老年代：</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830142.png" alt="image-20241203162929929"></p>
+<p>调整内存区域大小</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830466.png" alt="image-20241203163031210"></p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830536.png" alt="image-20241203163350266"></p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830607.png" alt="image-20241203163651763"></p>
+<p>如果Minor GC后对象的年龄达到阈值（最大15，默认值和垃圾回收器有关），对像就会被晋升至老年代。</p>
+<p>当老年代中空间不足，无法放入新的对象时，先尝试ninor gc如果还是不足，就会触发Full GC,Full GC会对整个堆进行垃圾回收。</p>
+<p>如果Full GC依然无法回收掉老年代的对象，那么当对像继续放入老年代时，就会抛出Out Of Memory异常</p>
+<h2 id="1-6-5-垃圾回收器"><a href="#1-6-5-垃圾回收器" class="headerlink" title="1.6.5 垃圾回收器"></a>1.6.5 垃圾回收器</h2><p>垃圾回收器的种类</p>
+<p>为什么分代GC算法要把堆分成年轻代和老年代？<br>●系统中的大部分对象，都是创建出来之后很快就不再使用可以被回收，比如用户获取订单数据，订单数据返回给用户之后就可以释放了。<br>●老年代中会存放长期存活的对象，比如Spring的大部分bean对象，在程序启动之后就不会被回收了。<br>●在虚拟机的默认设置中，新生代大小要远小于老年代的大小。</p>
+<p>分代GC算法将堆分成年轻代和老年代主要原因有：<br>1、可以通过调整年轻代和老年代的比例来适应不同类型的应用程序，提高内存的利用率和性能。<br>2、新生代和老年代使用不同的垃圾回收算法，新生代一般选择复制算法，老年代可以选择标记清除和标记整理算法，由程序员来选择灵活度较高。<br>3、分代的设计中允许只回收新生代(minor gc)，如果能满足对象分配的要求就不需要对整个堆进行回收(fu训lgc,STW时间就会减少。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830862.png" alt="image-20241203164540676"></p>
+<p>年轻代-serial垃圾回收器</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830931.png" alt="image-20241203164706342"></p>
+<p>年轻代-parnew垃圾回收器</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830252.png" alt="image-20241203164832727"></p>
+<p>老年代-CMS垃圾回收器</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830477.png" alt="image-20241203165019923"></p>
+<p>CMS执行步骤：</p>
+<p>1初始标记，用极短的时间标记出GC Roots能直接关联到的对象。<br>2.并发标记，标记所有的对象，用户线程不需要暂停。<br>3重新标记，由于并发标记阶段有些对象会发生了变化，存在错标、漏标等情况，需要重新标记。<br>4并发清理，清理死亡的对象，用户线程不需要暂停。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830514.png" alt="image-20241203165311280"></p>
+<p>缺点：<br>1、CMS使用了标记-清除算法，在垃圾收集结束之后会出现大量的内存碎片，CMS会在Full GC时进行碎片的整理。这样会导致用户线程暂停，可以使用-XX:CMSFullGCsBeforeCompaction&#x3D;N参数（默认O)调整N次Full GC之后再整理。<br>2、无法处理在并发清理过程中产生的“浮动垃圾”，不能做到完全的垃圾回收。<br>3、如果老年代内存不足无法分配对象，CMS就会退化成Serial Old.单线程回收老年代。</p>
+<p>年轻代-paraller scavenge垃圾回收器</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830583.png" alt="image-20241203165734544"></p>
+<p>老年代-parallel old垃圾回收器</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830989.png" alt="image-20241203170315567"></p>
+<p>Parallel Scavenge允许手动设置最大暂停时间和吞吐量。<br>Oracle官方建议在使用这个组合时，不要设置堆内存的最大值，垃圾回收器会根据最大暂停时间和吞吐量自动调整内存大小。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830964.png" alt="image-20241203170603498"></p>
+<h2 id="1-6-6-G1垃圾回收器"><a href="#1-6-6-G1垃圾回收器" class="headerlink" title="1.6.6 G1垃圾回收器"></a>1.6.6 G1垃圾回收器</h2><p>而G1设计目标就是将上述两种垃圾回收器的优点融合：<br>1支持巨大的堆空间回收，并有较高的吞吐量。<br>2.支持多CPU并行垃圾回收。<br>3.允许用户设置最大暂停时间。</p>
+<p>G1之前的垃圾回收器，内存一般是连续的</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830106.png" alt="image-20241203170819375"></p>
+<p>G1垃圾回收器</p>
+<p>G1的整个堆会被划分成多个大小相等的区域，称之为区Region,区域不要求是连续的。分为Eden、Survivor、Old区。Region的大小通过堆空间大小&#x2F;2048计算得到，也可以通过参数-XX:G1 HeapRegionSize&#x3D;32m指定（其中32m指定region,大小为32M),Region size必须是2的指数幂，取值范围从1M到32M。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830141.png" alt="image-20241203170941581"></p>
+<p>G1垃圾回收两种方式：年轻代回收、混合回收</p>
+<p>●年轻代回收(Young GC),回收Eden区和Survivorl区中不用的对象。会导致STW,G1中可以通过参数<br>-XX:MaxGCPauseMillis&#x3D;n(默认200)设置每次垃圾回收时的最大暂停时间毫秒数，G1垃圾回收器会尽可能地保证暂停时间。</p>
+<p>1、新创建的对象会存放在Eden区。当G1判断年轻代区不足(max默认60%)，无法分配对象时需要回收时会执行Young GC。<br>2、标记出Eden和Survivorl区域中的存活对象，<br>3、根据配置的最大暂停时间选择某些区域将存活对象复制到一个新的Survivo区中（年龄+1），清空这些区域。</p>
+<p>G1在进行Young GC的过程中会去记录每次垃圾回收时每个Eden区和Survivorl区的平均耗时，以作为下次回收时的参考依据。这样就可以根据配置的最大暂停时间计算出本次回收时最多能回收多少个Regionl区域了。<br>比如-XX:MaxGCPauseMillis&#x3D;n(默认200)，每个Region回收耗时40ms,那么这次回收最多只能回收4个Region。</p>
+<p>4、后续Young GC时与之前相同，只不过Survivorl区中存活对象会被搬运到另一个Survivor区。<br>5、当某个存活对像象的年龄到达阈值（默认15），将被放入老年代。</p>
+<p>6、部分对象如果大小超过Region的一半，会直接放入老年代，这类老年代被称为Humongous[区。比如堆内存是4G,每个Region是2M,只要一个大对象超过了1M就被放入Humongous[区，如果对象过大会横跨多个Region。</p>
+<p>7、多次回收之后，会出现很多Od老年代区，此时总堆占有率达到阈值时</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830244.png" alt="image-20241203171411958"></p>
+<p>混合回收</p>
+<p>●混合回收分为：初始标记(initial mark)、并发标记(concurrent mark)、最终标记(remark或者FinalizeMarking)、并发清理(cleanup)<br>●G1对老年代的清理会选择存活度最低的区域来进行回收，这样可以保证回收效率最高，这也是G1(Garbage first)名称的由来。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830349.png" alt="image-20241203171538032"></p>
+<p>G1对老年代的清理会选择存活度最低的区域来进行回收，这样可以保证回收效率最高，这也是G1(Garbage first)名称的由来。<br>最后清理阶段使用复制算法，不会产生内存碎片。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830558.png" alt="image-20241203171638131"></p>
+<p>FULL GC</p>
+<p>注意：如果清理过程中发现没有足够的空Region存放转移的对像，会出现Full GC.。单线程执行标记-整理算法，此时会导致用户线程的暂停。所以尽量保证应该用的堆内存有一定多余的空间。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830672.png" alt="image-20241203171705125"></p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412031830758.png" alt="image-20241203171718702"></p>
+<p>ParNew+CMS(关注暂停时间)、Parallel Scavenge+Parallel Old(关注吞吐量)、G1(JDK8之前不建议，较大堆并且关注暂停时间)</p>
+<p>JDK9之后：G1(默认)</p>
+<p>从JDK9之后，由于G1日趋成熟，JDK默认的垃圾回收器已经修改为G1,所以强烈建议在生产环境上使用G1。</p>
+<p>G1的实现原理将在《原理篇》中介绍，更多前沿技术ZGC、GraalVM:将在《高级篇》中介绍。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+      
+      
+      
+      
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item" data-aos="zoom-in"><a class="article-tag-list-link" href="/tags/JVM/" rel="tag">JVM</a></li></ul>
+
+
+    </footer>
+  </div>
+  
+  <nav id="article-nav" data-aos="fade-up">
+    
+      <div class="article-nav-link-wrap article-nav-link-left">
+        
+          
+          
+            <img data-src="/images/banner.webp" data-sizes="auto" alt="JVM内存" class="lazyload">
+          
+        
+        <a href="/2024/12/02/JVM%E5%86%85%E5%AD%98/"></a>
+        <div class="article-nav-caption">前一篇</div>
+        <h3 class="article-nav-title">
+          
+            JVM内存
+          
+        </h3>
+      </div>
+    
+    
+    <div class="article-nav-link-wrap article-nav-link-right">
+      
+        
+        
+          <img data-src="/images/banner.webp" data-sizes="auto" alt="Java虚拟机类加载器" class="lazyload">
+        
+      
+      <a href="/2024/12/01/%E8%99%9A%E6%8B%9F%E6%9C%BA%E4%B9%8B%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8/"></a>
+      <div class="article-nav-caption">后一篇</div>
+      <h3 class="article-nav-title">
+        
+          Java虚拟机类加载器
+        
+      </h3>
+    </div>
+    
+  </nav>
+
+
+</article>
+
+
+
+
+
+
+</section>
+          
+            <aside id="sidebar">
+  <div class="sidebar-wrapper wrap-sticky">
+    <div class="sidebar-wrap" data-aos="fade-up">
+      
+        <div class="sidebar-toc-sidebar"><div class="sidebar-toc">
+  <h3 class="toc-title">文章目录</h3>
+  <div class="sidebar-toc-wrapper toc-div-class" >
+      
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1-6-Java%E7%9A%84%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6"><span class="toc-number">1.</span> <span class="toc-text">1.6 Java的垃圾回收</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-6-1-%E8%87%AA%E5%8A%A8%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6"><span class="toc-number">1.1.</span> <span class="toc-text">1.6.1 自动垃圾回收</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-6-2-%E6%96%B9%E6%B3%95%E5%8C%BA%E7%9A%84%E5%9B%9E%E6%94%B6"><span class="toc-number">1.2.</span> <span class="toc-text">1.6.2 方法区的回收</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-6-3-%E5%A0%86%E5%9B%9E%E6%94%B6"><span class="toc-number">1.3.</span> <span class="toc-text">1.6.3 堆回收</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-6-4-%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E7%AE%97%E6%B3%95"><span class="toc-number">1.4.</span> <span class="toc-text">1.6.4 垃圾回收算法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-6-5-%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E5%99%A8"><span class="toc-number">1.5.</span> <span class="toc-text">1.6.5 垃圾回收器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-6-6-G1%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E5%99%A8"><span class="toc-number">1.6.</span> <span class="toc-text">1.6.6 G1垃圾回收器</span></a></li></ol></li></ol>
+      
+  </div>
+</div>
+</div>
+        <div class="sidebar-common-sidebar hidden"><div class="sidebar-author">
+  <img data-src="/avatar/avatar.webp" data-sizes="auto" alt="改bug的龙哥" class="lazyload">
+  <div class="sidebar-author-name">改bug的龙哥</div>
+  <div class="sidebar-description"></div>
+</div>
+<div class="sidebar-state">
+  <div class="sidebar-state-article">
+    <div>文章</div>
+    <div class="sidebar-state-number">4</div>
+  </div>
+  <div class="sidebar-state-category">
+    <div>分类</div>
+    <div class="sidebar-state-number">1</div>
+  </div>
+  <div class="sidebar-state-tag">
+    <div>标签</div>
+    <div class="sidebar-state-number">1</div>
+  </div>
+</div>
+<div class="sidebar-social">
+  
+</div>
+<div class="sidebar-menu">
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/" aria-label="首页"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">首页</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/archives" aria-label="归档"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">归档</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/about" aria-label="关于"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">关于</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/friend" aria-label="友链"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">友链</div>
+    </div>
+  
+</div>
+</div>
+      
+      
+        <div class="sidebar-btn-wrapper" style="position:static">
+          <div class="sidebar-toc-btn current"></div>
+          <div class="sidebar-common-btn"></div>
+        </div>
+      
+    </div>
+  </div>
+
+  
+</aside>
+
+          
+        </div>
+        <footer id="footer">
+  <div style="width: 100%; overflow: hidden">
+    <div class="footer-line"></div>
+  </div>
+  <div id="footer-info">
+    
+    <div>
+      <span class="icon-copyright"></span>
+      2020-2024
+      <span class="footer-info-sep"></span>
+      改bug的龙哥
+    </div>
+    
+      <div>
+        基于&nbsp;<a href="https://hexo.io/" rel="noopener external nofollow noreferrer" target="_blank">Hexo</a>&nbsp;
+        Theme.<a href="https://github.com/D-Sketon/hexo-theme-reimu" rel="noopener external nofollow noreferrer" target="_blank">Reimu</a>
+      </div>
+    
+    
+      <div>
+        <span class="icon-brush"></span>
+        11.3k
+        &nbsp;|&nbsp;
+        <span class="icon-coffee"></span>
+        00:37
+      </div>
+    
+    
+    
+    
+      <div>
+        <span class="icon-eye"></span>
+        <span id="busuanzi_container_site_pv">总访问量&nbsp;<span id="busuanzi_value_site_pv"></span></span>
+        &nbsp;|&nbsp;
+        <span class="icon-user"></span>
+        <span id="busuanzi_container_site_uv">总访客量&nbsp;<span id="busuanzi_value_site_uv"></span></span>
+      </div>
+    
+  </div>
+</footer>
+
+        <div class="sidebar-top">
+          <img src="/images/taichi.png" height="50" width="50" alt="backtop" />
+          <div class="arrow-up"></div>
+        </div>
+        <div id="mask"></div>
+      </div>
+      <nav id="mobile-nav">
+  <div class="sidebar-wrap">
+    
+      <div class="sidebar-toc-sidebar"><div class="sidebar-toc">
+  <h3 class="toc-title">文章目录</h3>
+  <div class="sidebar-toc-wrapper toc-div-class" >
+      
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1-6-Java%E7%9A%84%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6"><span class="toc-number">1.</span> <span class="toc-text">1.6 Java的垃圾回收</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-6-1-%E8%87%AA%E5%8A%A8%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6"><span class="toc-number">1.1.</span> <span class="toc-text">1.6.1 自动垃圾回收</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-6-2-%E6%96%B9%E6%B3%95%E5%8C%BA%E7%9A%84%E5%9B%9E%E6%94%B6"><span class="toc-number">1.2.</span> <span class="toc-text">1.6.2 方法区的回收</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-6-3-%E5%A0%86%E5%9B%9E%E6%94%B6"><span class="toc-number">1.3.</span> <span class="toc-text">1.6.3 堆回收</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-6-4-%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E7%AE%97%E6%B3%95"><span class="toc-number">1.4.</span> <span class="toc-text">1.6.4 垃圾回收算法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-6-5-%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E5%99%A8"><span class="toc-number">1.5.</span> <span class="toc-text">1.6.5 垃圾回收器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-6-6-G1%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E5%99%A8"><span class="toc-number">1.6.</span> <span class="toc-text">1.6.6 G1垃圾回收器</span></a></li></ol></li></ol>
+      
+  </div>
+</div>
+</div>
+      <div class="sidebar-common-sidebar hidden"><div class="sidebar-author">
+  <img data-src="/avatar/avatar.webp" data-sizes="auto" alt="改bug的龙哥" class="lazyload">
+  <div class="sidebar-author-name">改bug的龙哥</div>
+  <div class="sidebar-description"></div>
+</div>
+<div class="sidebar-state">
+  <div class="sidebar-state-article">
+    <div>文章</div>
+    <div class="sidebar-state-number">4</div>
+  </div>
+  <div class="sidebar-state-category">
+    <div>分类</div>
+    <div class="sidebar-state-number">1</div>
+  </div>
+  <div class="sidebar-state-tag">
+    <div>标签</div>
+    <div class="sidebar-state-number">1</div>
+  </div>
+</div>
+<div class="sidebar-social">
+  
+</div>
+<div class="sidebar-menu">
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/" aria-label="首页"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">首页</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/archives" aria-label="归档"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">归档</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/about" aria-label="关于"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">关于</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/friend" aria-label="友链"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">友链</div>
+    </div>
+  
+</div>
+</div>
+    
+  </div>
+  
+    <div class="sidebar-btn-wrapper">
+      <div class="sidebar-toc-btn current"></div>
+      <div class="sidebar-common-btn"></div>
+    </div>
+  
+</nav>
+
+    </div>
+    
+    
+<script src="https://npm.webcache.cn/lazysizes@5.3.2/lazysizes.min.js" integrity="sha384-3gT&#x2F;vsepWkfz&#x2F;ff7PpWNUeMzeWoH3cDhm&#x2F;A8jM7ouoAK0&#x2F;fP&#x2F;9bcHHR5kHq2nf+e" crossorigin="anonymous"></script>
+
+
+<script src="https://npm.webcache.cn/clipboard@2.0.11/dist/clipboard.min.js" integrity="sha384-J08i8An&#x2F;QeARD9ExYpvphB8BsyOj3Gh2TSh1aLINKO3L0cMSH2dN3E22zFoXEi0Q" crossorigin="anonymous"></script>
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+  
+<script src="/js/aos.js"></script>
+
+  <script>
+    var aosInit = () => {
+      AOS.init({
+        duration: 1000,
+        easing: "ease",
+        once: true,
+        offset: 50,
+      });
+    };
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', aosInit);
+    } else {
+      aosInit();
+    }
+  </script>
+
+
+
+<script src="/js/pjax_script.js" data-pjax></script>
+
+
+
+
+
+
+
+  
+<script src="https://npm.webcache.cn/mouse-firework@0.0.6/dist/index.umd.js" integrity="sha384-vkGvf25gm1C1PbcoD5dNfc137HzNL&#x2F;hr1RKA5HniJOaawtvUmH5lTVFgFAruE9Ge" crossorigin="anonymous"></script>
+
+  <script>
+    window.firework && window.firework(JSON.parse('{"excludeElements":["a","button"],"particles":[{"shape":"circle","move":["emit"],"easing":"easeOutExpo","colors":["#ff5252","#ff7c7c","#ffafaf","#ffd0d0"],"number":20,"duration":[1200,1800],"shapeOptions":{"radius":[16,32],"alpha":[0.3,0.5]}},{"shape":"circle","move":["diffuse"],"easing":"easeOutExpo","colors":["#ff0000"],"number":1,"duration":[1200,1800],"shapeOptions":{"radius":20,"alpha":[0.2,0.5],"lineWidth":6}}]}'))
+  </script>
+
+
+
+
+
+
+
+
+<div id="lazy-script">
+  <div>
+    
+    
+      
+        
+<script src="/js/insert_highlight.js" data-pjax></script>
+
+      
+    
+    
+      <script type="module" data-pjax>
+        const PhotoSwipeLightbox = (await safeImport("https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe-lightbox.esm.min.js", "sha384-DiL6M/gG+wmTxmCRZyD1zee6lIhawn5TGvED0FOh7fXcN9B0aZ9dexSF/N6lrZi/")).default;
+        
+        const pswp = () => {
+          if (_$$('.article-entry a.article-gallery-item').length > 0) {
+            new PhotoSwipeLightbox({
+              gallery: '.article-entry',
+              children: 'a.article-gallery-item',
+              pswpModule: () => safeImport("https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe.esm.min.js", "sha384-WkkO3GCmgkC3VQWpaV8DqhKJqpzpF9JoByxDmnV8+oTJ7m3DfYEWX1fu1scuS4+s")
+            }).init();
+          }
+          if(_$$('.article-gallery a.article-gallery-item').length > 0) {
+            new PhotoSwipeLightbox({
+              gallery: '.article-gallery',
+              children: 'a.article-gallery-item',
+              pswpModule: () => safeImport("https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe.esm.min.js", "sha384-WkkO3GCmgkC3VQWpaV8DqhKJqpzpF9JoByxDmnV8+oTJ7m3DfYEWX1fu1scuS4+s")
+            }).init();
+          }
+          window.lightboxStatus = 'done';
+          window.removeEventListener('lightbox:ready', pswp);
+        }
+        if(window.lightboxStatus === 'ready') {
+          pswp()
+        } else {
+          window.addEventListener('lightbox:ready', pswp);
+        }
+      </script>
+      
+
+
+
+
+
+
+
+
+    
+  </div>
+</div>
+
+
+  <script>
+    console.log(String.raw`%c 
+ ______     ______     __     __    __     __  __    
+/\  == \   /\  ___\   /\ \   /\ "-./  \   /\ \/\ \   
+\ \  __<   \ \  __\   \ \ \  \ \ \-./\ \  \ \ \_\ \  
+ \ \_\ \_\  \ \_____\  \ \_\  \ \_\ \ \_\  \ \_____\ 
+  \/_/ /_/   \/_____/   \/_/   \/_/  \/_/   \/_____/ 
+                                                  
+`,'color: #ff5252;')
+    console.log('%c Theme.Reimu v' + '0.3.5' + ' %c https://github.com/D-Sketon/hexo-theme-reimu ', 'color: white; background: #ff5252; padding:5px 0;', 'padding:4px;border:1px solid #ff5252;')
+  </script>
+  
+
+
+
+  
+<script src="https://npm.webcache.cn/busuanzi@2.3.0/bsz.pure.mini.js" integrity="sha384-0M75wtSkhjIInv4coYlaJU83+OypaRCIq2SukQVQX04eGTCBXJDuWAbJet56id+S" crossorigin="anonymous" async></script>
+
+
+
+
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      for (let registration of registrations) {
+        registration.unregister();
+      }
+    });
+  }
+</script>
+
+  </body>
+  </html>
+
