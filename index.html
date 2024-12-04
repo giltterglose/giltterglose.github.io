@@ -355,10 +355,53 @@ Java垃圾回收过程会通过单独的GC线程来完成，但是不管使用�
     <div class="post-wrapper">
   <div class="post-wrap-right" data-aos="fade-up">
     
-      <a class="post-link" href="/2024/12/01/%E8%99%9A%E6%8B%9F%E6%9C%BA%E4%B9%8B%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8/" aria-label="Java虚拟机类加载器"></a>
+      <a class="post-link" href="/2024/12/02/MySQL%E7%B4%A2%E5%BC%95/" aria-label="MySQL索引"></a>
     
     
     <div class="post-cover-right">
+      
+        
+        
+          <img data-src="/images/banner.webp" data-sizes="auto" alt="MySQL索引" class="lazyload">
+        
+      
+    </div>
+    <div class="post-info">
+      <div class="post-meta">
+        <span><span class="icon-calendar"></span>2024-12-02</span>
+        <span><span class="icon-pencil"></span>1.4k 字</span>
+        <span><span class="icon-clock"></span>4 分钟</span>
+      </div>
+      <h2 class="post-title">MySQL索引</h2>
+      <article class="post-article">
+        
+          3. 索引索引是帮助MySQL高效获取数据的数据结构，在数据之外，数据库系统还维护满足特定查找算法的数据结构，这些数据结构以某种方式引用（指向数据）。
+优缺点
+优点：提高数据检索的效率，降低数据库的io成本，通过索引列对数据进行排序，降低数据排序成本，降低CPU的消耗。
+缺点：索引列也是占用空间的，索引大大提高了查询效率，也降低了更新表的速度。
+3.1 结构
+索引结构和存储引擎：
+
+3.2 BTreeB树：多路平衡查找树
+树的读书：一个节点的子节点个数
+以五阶b-tree为例：
+
+3.3 B+tree
+特点：所有元素都会出现在叶子节点，叶子节点形成一个单向链表。
+MySQL索引数据结构对经典的
+        
+      </article>
+    </div>
+  </div>
+</div>
+  
+    <div class="post-wrapper">
+  <div class="post-wrap-left" data-aos="fade-up">
+    
+      <a class="post-link" href="/2024/12/01/%E8%99%9A%E6%8B%9F%E6%9C%BA%E4%B9%8B%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8/" aria-label="Java虚拟机类加载器"></a>
+    
+    
+    <div class="post-cover-left">
       
         
         
@@ -392,12 +435,12 @@ JDK8及之前的版本类加载器中的种类
 </div>
   
     <div class="post-wrapper">
-  <div class="post-wrap-left" data-aos="fade-up">
+  <div class="post-wrap-right" data-aos="fade-up">
     
       <a class="post-link" href="/2024/11/29/Java%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%9F%BA%E7%A1%80%E7%AF%87/" aria-label="Java虚拟机基础篇"></a>
     
     
-    <div class="post-cover-left">
+    <div class="post-cover-right">
       
         
         
@@ -452,7 +495,7 @@ jvm规范由Oracle指定，内容包含了Jav
 <div class="sidebar-state">
   <div class="sidebar-state-article">
     <div>文章</div>
-    <div class="sidebar-state-number">7</div>
+    <div class="sidebar-state-number">8</div>
   </div>
   <div class="sidebar-state-category">
     <div>分类</div>
@@ -460,7 +503,7 @@ jvm规范由Oracle指定，内容包含了Jav
   </div>
   <div class="sidebar-state-tag">
     <div>标签</div>
-    <div class="sidebar-state-number">3</div>
+    <div class="sidebar-state-number">4</div>
   </div>
 </div>
 <div class="sidebar-social">
@@ -525,10 +568,10 @@ jvm规范由Oracle指定，内容包含了Jav
     
       <div>
         <span class="icon-brush"></span>
-        15.3k
+        16.7k
         &nbsp;|&nbsp;
         <span class="icon-coffee"></span>
-        00:49
+        00:53
       </div>
     
     
@@ -562,7 +605,7 @@ jvm规范由Oracle指定，内容包含了Jav
 <div class="sidebar-state">
   <div class="sidebar-state-article">
     <div>文章</div>
-    <div class="sidebar-state-number">7</div>
+    <div class="sidebar-state-number">8</div>
   </div>
   <div class="sidebar-state-category">
     <div>分类</div>
@@ -570,7 +613,7 @@ jvm规范由Oracle指定，内容包含了Jav
   </div>
   <div class="sidebar-state-tag">
     <div>标签</div>
-    <div class="sidebar-state-number">3</div>
+    <div class="sidebar-state-number">4</div>
   </div>
 </div>
 <div class="sidebar-social">

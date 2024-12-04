@@ -14,7 +14,7 @@
   
   
   <title>
-    MySQL存储引擎 |
+    MySQL索引 |
     
     改bug的龙哥的博客
   </title>
@@ -29,22 +29,29 @@
 
   
   
-    <meta name="description" content="2. 存储引擎2.1 MySQL体系结构 存储引擎分为连接层，服务层，引擎层，存储层。 连接层：最上层是一些客户端和链接服务，主要完成一些类似于连接处理、授权认证、及相关的安全方案。服务器也会为安全接入的每个客户端验证它所具有的操作权限。服务层：第二层架构主要完成大多数的核心服务功能，如SQL接口，井并完成缓存的查询，SQL的分析和优化，部分内置函数的执行。所有跨存储引擎的功能也在这一层实现，如过">
+    <meta name="description" content="3. 索引索引是帮助MySQL高效获取数据的数据结构，在数据之外，数据库系统还维护满足特定查找算法的数据结构，这些数据结构以某种方式引用（指向数据）。 优缺点 优点：提高数据检索的效率，降低数据库的io成本，通过索引列对数据进行排序，降低数据排序成本，降低CPU的消耗。 缺点：索引列也是占用空间的，索引大大提高了查询效率，也降低了更新表的速度。 3.1 结构 索引结构和存储引擎：  3.2 BTr">
 <meta property="og:type" content="article">
-<meta property="og:title" content="MySQL存储引擎">
-<meta property="og:url" content="http://example.com/2024/12/02/mysql%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E/index.html">
+<meta property="og:title" content="MySQL索引">
+<meta property="og:url" content="http://example.com/2024/12/02/MySQL%E7%B4%A2%E5%BC%95/index.html">
 <meta property="og:site_name" content="改bug的龙哥的博客">
-<meta property="og:description" content="2. 存储引擎2.1 MySQL体系结构 存储引擎分为连接层，服务层，引擎层，存储层。 连接层：最上层是一些客户端和链接服务，主要完成一些类似于连接处理、授权认证、及相关的安全方案。服务器也会为安全接入的每个客户端验证它所具有的操作权限。服务层：第二层架构主要完成大多数的核心服务功能，如SQL接口，井并完成缓存的查询，SQL的分析和优化，部分内置函数的执行。所有跨存储引擎的功能也在这一层实现，如过">
+<meta property="og:description" content="3. 索引索引是帮助MySQL高效获取数据的数据结构，在数据之外，数据库系统还维护满足特定查找算法的数据结构，这些数据结构以某种方式引用（指向数据）。 优缺点 优点：提高数据检索的效率，降低数据库的io成本，通过索引列对数据进行排序，降低数据排序成本，降低CPU的消耗。 缺点：索引列也是占用空间的，索引大大提高了查询效率，也降低了更新表的速度。 3.1 结构 索引结构和存储引擎：  3.2 BTr">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412032012353.png">
-<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412032012341.png">
-<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412032012338.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412042103263.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412042103271.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412042103282.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412042103279.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412042103389.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412042103295.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412042103820.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412042103918.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412042103069.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412042103216.png">
 <meta property="article:published_time" content="2024-12-02T13:23:00.000Z">
-<meta property="article:modified_time" content="2024-12-03T12:13:20.038Z">
+<meta property="article:modified_time" content="2024-12-04T13:04:37.522Z">
 <meta property="article:author" content="改bug的龙哥">
-<meta property="article:tag" content="MySQL存储引擎">
+<meta property="article:tag" content="MySQL索引">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412032012353.png">
+<meta name="twitter:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412042103263.png">
   
   
     <link rel="alternate" href="/atom.xml" title="改bug的龙哥的博客" type="application/atom+xml">
@@ -155,7 +162,7 @@
 <header id="header">
   
     
-      <img fetchpriority="high" src="/images/banner.webp" alt="MySQL存储引擎">
+      <img fetchpriority="high" src="/images/banner.webp" alt="MySQL索引">
     
   
   <div id="header-outer">
@@ -164,7 +171,7 @@
         
         
           <a href="/" id="logo">
-            <h1 data-aos="slide-up">MySQL存储引擎</h1>
+            <h1 data-aos="slide-up">MySQL索引</h1>
           </a>
         
       
@@ -180,13 +187,13 @@
 
         <div id="content">
           
-          <section id="main"><article id="post-mysql存储引擎" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+          <section id="main"><article id="post-MySQL索引" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-inner" data-aos="fade-up">
     <div class="article-meta">
       <div class="article-date">
-  <a href="/2024/12/02/mysql%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E/" class="article-date-link" data-aos="zoom-in">
+  <a href="/2024/12/02/MySQL%E7%B4%A2%E5%BC%95/" class="article-date-link" data-aos="zoom-in">
     <time datetime="2024-12-02T13:23:00.000Z" itemprop="datePublished">2024-12-02</time>
-    <time style="display: none;" id="post-update-time">2024-12-03</time>
+    <time style="display: none;" id="post-update-time">2024-12-04</time>
   </a>
 </div>
 
@@ -203,35 +210,56 @@
     <div class="e-content article-entry" itemprop="articleBody">
       
       
-        <h1 id="2-存储引擎"><a href="#2-存储引擎" class="headerlink" title="2. 存储引擎"></a>2. 存储引擎</h1><h2 id="2-1-MySQL体系结构"><a href="#2-1-MySQL体系结构" class="headerlink" title="2.1 MySQL体系结构"></a>2.1 MySQL体系结构</h2><p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412032012353.png" alt="image-20241203194217523"></p>
-<p>存储引擎分为连接层，服务层，引擎层，存储层。</p>
-<p>连接层：最上层是一些客户端和链接服务，主要完成一些类似于连接处理、授权认证、及相关的安全方案。服务器也会为安全接入的每个客户端验证它所具有的操作权限。<br>服务层：第二层架构主要完成大多数的核心服务功能，如SQL接口，井并完成缓存的查询，SQL的分析和优化，部分内置函数的执行。所有跨存储引擎的功能也在这一层实现，如过程、函数等。<br>引擎层：存储引擎真正的负责了MySQL中数据的存储和提取，服务器通过API和存储引擎进行通信。不同的存储引擎具有不同的功能，这样我们可以根据自己的需要，来选取合适的存储引擎。<br>存储层：主要是将数据存储在文件系统之上，并完成与存储引擎的交互。</p>
-<h2 id="2-2-简介"><a href="#2-2-简介" class="headerlink" title="2.2 简介"></a>2.2 简介</h2><p>存储引擎是存储数据，简历索引，更新&#x2F;查询数据等技术的实现方式。存储引擎是基于表的，而不是基于库的，存储引擎也被成为表类型。</p>
-<p>默认的存储引擎：InnoDB</p>
-<p>创建表的时候，指定存储引擎：</p>
-<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412032012341.png" alt="image-20241203194909775"></p>
-<p>数据库支持的存储引擎：</p>
-<p>InnoDB，memory，MyISAM等。</p>
-<h2 id="2-3-存储引擎的特点"><a href="#2-3-存储引擎的特点" class="headerlink" title="2.3 存储引擎的特点"></a>2.3 存储引擎的特点</h2><p>InnoDB</p>
-<p>InnoDB是一种兼顾高可靠性和高性能的通用存储引擎，在MySQL 5.5之后，InnoDB是默认的MySQL引擎。</p>
-<p>特点：DML操作遵循ACID模型，支持事务；</p>
-<p>行级锁，提高并发访问的性能；</p>
-<p>支持外键约束，保证数据的完整性和正确性。</p>
-<p>XXX.ibd:x代表的是表名，innoDBi引擎的每张表都会对应这样一个表空间文件，存储该表的表结构(frm、Sdi)、数据和素)。<br>参数：innodb_file_per_table</p>
-<p>MyISAM</p>
-<p>这个是MySQL早期的默认存储引擎</p>
+        <h1 id="3-索引"><a href="#3-索引" class="headerlink" title="3. 索引"></a>3. 索引</h1><p>索引是帮助MySQL高效获取数据的数据结构，在数据之外，数据库系统还维护满足特定查找算法的数据结构，这些数据结构以某种方式引用（指向数据）。</p>
+<p>优缺点</p>
+<p>优点：提高数据检索的效率，降低数据库的io成本，通过索引列对数据进行排序，降低数据排序成本，降低CPU的消耗。</p>
+<p>缺点：索引列也是占用空间的，索引大大提高了查询效率，也降低了更新表的速度。</p>
+<h2 id="3-1-结构"><a href="#3-1-结构" class="headerlink" title="3.1 结构"></a>3.1 结构</h2><p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412042103263.png" alt="image-20241204113403101"></p>
+<p>索引结构和存储引擎：</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412042103271.png" alt="image-20241204113626499"></p>
+<h2 id="3-2-BTree"><a href="#3-2-BTree" class="headerlink" title="3.2 BTree"></a>3.2 BTree</h2><p>B树：多路平衡查找树</p>
+<p>树的读书：一个节点的子节点个数</p>
+<p>以五阶b-tree为例：</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412042103282.png" alt="image-20241204113854031"></p>
+<h2 id="3-3-B-tree"><a href="#3-3-B-tree" class="headerlink" title="3.3 B+tree"></a>3.3 B+tree</h2><p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412042103279.png" alt="image-20241204114029170"></p>
+<p>特点：所有元素都会出现在叶子节点，叶子节点形成一个单向链表。</p>
+<p>MySQL索引数据结构对经典的B+树进行优化，在原有的B+Tree的基础上，增加一个指向相邻叶子节点的链表指针，就形成了带有顺序指针的B+Tree，提高了区间访问性能。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412042103389.png" alt="image-20241204114502219"></p>
+<h2 id="3-4-Hash索引"><a href="#3-4-Hash索引" class="headerlink" title="3.4 Hash索引"></a>3.4 Hash索引</h2><p>哈希索引就是采用一定的hash算法，将键值转换成新的哈希值，映射到对应的槽位上，然后存储在hash表中。</p>
+<p>如果两个或者多个键值，映射到一个相同的槽位上，则发生hash冲突，可以通过链表解决。</p>
 <p>特点：</p>
-<p>不支持事务，不支持外键</p>
-<p>支持表锁，不支持行锁</p>
-<p>访问速度快</p>
-<p>memory：</p>
-<p>memory引擎的表数据时存储在内存中，由于受到硬件的问题，或者断电的问题，只能将这些表作为临时表或者缓存使用。</p>
-<p>特点：内存存放，hash索引（默认）</p>
-<p>下表是一个经典的面试题</p>
-<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412032012338.png" alt="image-20241203200826301"></p>
-<p>黄色的时innodb和其他俩存储引擎的区别</p>
-<p>选择</p>
-<p>InnoDB:是Mysq的默认存储引擎，支持事务、外键。如果应用对事务的完整性有比较高的要求，在并发条件下要求数据的一致性，数据操作除了插入和查询之外，还包含很多的更新、删除操作，那么InnoDB:存储引擎是比较合适的选择。<br>MyISAM：如果应用是以读操作和插入操作为主，只有很少的更新和别除操作，并且对事务的完整性、并发性要求不是很高，那么选择这个存储引擎是非常合适的。<br>MEMORY:将所有数据保存在内存中，访问速度快，通常用于临时表及缓存。MEMORY的缺陷就是对表的大小有限制，太大的表无法缓存在内存中，而且无法保障数据的安全性。</p>
+<p>Hash索引只能用于对等比较(&#x3D;，in),不支持范围查询(between.,&gt;,&lt;,…)<br>无法利用索引完成排序操作<br>查询效率高，通常只需要一次检索就可以了，效率通常要高于B+tree索引</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412042103295.png" alt="image-20241204114930069"></p>
+<p>支持的是memory，innodb具有自适应的hash功能。</p>
+<h2 id="3-5-索引的分类"><a href="#3-5-索引的分类" class="headerlink" title="3.5 索引的分类"></a>3.5 索引的分类</h2><p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412042103820.png" alt="image-20241204115041833"></p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412042103918.png" alt="image-20241204115259509"></p>
+<p>聚集索引的选取规则：</p>
+<p>如果存在主键，主键索引就是聚集索引；</p>
+<p>如果不存在主键，将使用第一个唯一的索引作为聚集索引；</p>
+<p>如果表不存在主键，或者没有适合的唯一索引，则innodb会自动生成一个rowid作为隐藏的聚集索引；</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412042103069.png" alt="image-20241204115602227"></p>
+<p>索引语法</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412042103216.png" alt="image-20241204115751415"></p>
+<h2 id="3-6-使用规则"><a href="#3-6-使用规则" class="headerlink" title="3.6 使用规则"></a>3.6 使用规则</h2><p>最左前缀原则：如果索引了多列（联合索引），要遵守最左前缀法则。最左前缀法则指的是查询从索引的最左列开始，并且不跳过索引中的列。</p>
+<p>如果跳跃了某一列，就失效了。</p>
+<p>索引失效：</p>
+<p>不要再索引列上进行运算操作，索引会失效</p>
+<p>字符串类型索引，不加引号，索引也会失效</p>
+<p>用or分割开的条件，如果o前的条件中的列有索引，而后面的列中没有索引，那么涉及的索引都不会被用到。</p>
+<p>mysql评估使用索引比全表慢，就会失效。</p>
+<p>前缀索引：当字段类型为字符串（varchar、text等）时，有时候需要索引很长的字符串，这会让索引变得很大，查询时，浪费大量的磁盘IO，影响查询效率。此时可以只将字符串的一部分前缀，建立索引，这样可以大大节约索引空间，从而提高索引效率。</p>
+<p>前缀长度：</p>
+<p>可以根据索引的选择性来决定，而选择性是指不重复的索引值（基数）和数据表的记录总数的比值，索引选择性越高则查询效率越高，唯一索引的选择性是1，这是最好的索引选择性，性能也是最好的。</p>
+<p>索引使用：</p>
+<p>覆盖索引：</p>
+<p>尽量使用覆盖索引（查询使用了索引，并且需要返回的列，在该索引中已经全部能够找到），减少select *。</p>
+<p>using index condition:查找使用了索引，但是需要回表查询数据<br>using where;using index:查找使用了索引l,但是需要的数据都在索引列中能找到，所以不需要回表查询数据</p>
+<p>单列索引：</p>
+<p>单列索引：即一个索引只包含单个列。<br>联合索引：即一个索引包含了多个列。</p>
+<p>在业务场景中，如果存在多个查询条件，考虑针对于查询字段建立索引时，建议建立联合索引，而非单列索引。</p>
+<p>多条件联合查询时，MySQL优化器会评估哪个字段的索引效率更高，会选择该索引完成本次查询。</p>
+<p>索引设计原则</p>
+<p>1.针对于数据量较大，且查询比较频繁的表建立索引。<br>2.针对于常作为查询条件(where)、排序(order by)、分组(group by)操作的字段建立索引。<br>3.尽量选择区分度高的列作为索引，尽量建立唯一索引，区分度越高，使用索引的效率越高。<br>4.如果是字符串类型的字段，字段的长度较长，可以针对于字段的特点，建立前缀索引。<br>5.尽量使用联合索引，减少单列索引，查询时，联合索引很多时候可以覆盖索引，节省存储空间，避免回表，提高查询效率。<br>6.要控制索引的数量，索引并不是多多益善，索引越多，维护索引结构的代价也就越大，会影响增副改的效率。<br>7.如果索引列不能存储NU儿L值，请在创建表时使用NOT NU儿L约束它。当优化器知道每列是否包含NULL值时，它可以更好地确定哪个索引最有效地用于查询。</p>
 
       
     </div>
@@ -244,7 +272,7 @@
       
       
       
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item" data-aos="zoom-in"><a class="article-tag-list-link" href="/tags/MySQL%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E/" rel="tag">MySQL存储引擎</a></li></ul>
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item" data-aos="zoom-in"><a class="article-tag-list-link" href="/tags/MySQL%E7%B4%A2%E5%BC%95/" rel="tag">MySQL索引</a></li></ul>
 
 
     </footer>
@@ -256,14 +284,14 @@
         
           
           
-            <img data-src="/images/banner.webp" data-sizes="auto" alt="MySQL事务" class="lazyload">
+            <img data-src="/images/banner.webp" data-sizes="auto" alt="MySQL存储引擎" class="lazyload">
           
         
-        <a href="/2024/12/02/MySQL%E4%BA%8B%E5%8A%A1/"></a>
+        <a href="/2024/12/02/mysql%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E/"></a>
         <div class="article-nav-caption">前一篇</div>
         <h3 class="article-nav-title">
           
-            MySQL事务
+            MySQL存储引擎
           
         </h3>
       </div>
@@ -273,14 +301,14 @@
       
         
         
-          <img data-src="/images/banner.webp" data-sizes="auto" alt="MySQL索引" class="lazyload">
+          <img data-src="/images/banner.webp" data-sizes="auto" alt="Java虚拟机类加载器" class="lazyload">
         
       
-      <a href="/2024/12/02/MySQL%E7%B4%A2%E5%BC%95/"></a>
+      <a href="/2024/12/01/%E8%99%9A%E6%8B%9F%E6%9C%BA%E4%B9%8B%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8/"></a>
       <div class="article-nav-caption">后一篇</div>
       <h3 class="article-nav-title">
         
-          MySQL索引
+          Java虚拟机类加载器
         
       </h3>
     </div>
@@ -305,7 +333,7 @@
   <h3 class="toc-title">文章目录</h3>
   <div class="sidebar-toc-wrapper toc-div-class" >
       
-        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#2-%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E"><span class="toc-number">1.</span> <span class="toc-text">2. 存储引擎</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#2-1-MySQL%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84"><span class="toc-number">1.1.</span> <span class="toc-text">2.1 MySQL体系结构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-2-%E7%AE%80%E4%BB%8B"><span class="toc-number">1.2.</span> <span class="toc-text">2.2 简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-3-%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E7%9A%84%E7%89%B9%E7%82%B9"><span class="toc-number">1.3.</span> <span class="toc-text">2.3 存储引擎的特点</span></a></li></ol></li></ol>
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#3-%E7%B4%A2%E5%BC%95"><span class="toc-number">1.</span> <span class="toc-text">3. 索引</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#3-1-%E7%BB%93%E6%9E%84"><span class="toc-number">1.1.</span> <span class="toc-text">3.1 结构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-2-BTree"><span class="toc-number">1.2.</span> <span class="toc-text">3.2 BTree</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-3-B-tree"><span class="toc-number">1.3.</span> <span class="toc-text">3.3 B+tree</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-4-Hash%E7%B4%A2%E5%BC%95"><span class="toc-number">1.4.</span> <span class="toc-text">3.4 Hash索引</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-5-%E7%B4%A2%E5%BC%95%E7%9A%84%E5%88%86%E7%B1%BB"><span class="toc-number">1.5.</span> <span class="toc-text">3.5 索引的分类</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-6-%E4%BD%BF%E7%94%A8%E8%A7%84%E5%88%99"><span class="toc-number">1.6.</span> <span class="toc-text">3.6 使用规则</span></a></li></ol></li></ol>
       
   </div>
 </div>
@@ -429,7 +457,7 @@
   <h3 class="toc-title">文章目录</h3>
   <div class="sidebar-toc-wrapper toc-div-class" >
       
-        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#2-%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E"><span class="toc-number">1.</span> <span class="toc-text">2. 存储引擎</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#2-1-MySQL%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84"><span class="toc-number">1.1.</span> <span class="toc-text">2.1 MySQL体系结构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-2-%E7%AE%80%E4%BB%8B"><span class="toc-number">1.2.</span> <span class="toc-text">2.2 简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-3-%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E7%9A%84%E7%89%B9%E7%82%B9"><span class="toc-number">1.3.</span> <span class="toc-text">2.3 存储引擎的特点</span></a></li></ol></li></ol>
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#3-%E7%B4%A2%E5%BC%95"><span class="toc-number">1.</span> <span class="toc-text">3. 索引</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#3-1-%E7%BB%93%E6%9E%84"><span class="toc-number">1.1.</span> <span class="toc-text">3.1 结构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-2-BTree"><span class="toc-number">1.2.</span> <span class="toc-text">3.2 BTree</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-3-B-tree"><span class="toc-number">1.3.</span> <span class="toc-text">3.3 B+tree</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-4-Hash%E7%B4%A2%E5%BC%95"><span class="toc-number">1.4.</span> <span class="toc-text">3.4 Hash索引</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-5-%E7%B4%A2%E5%BC%95%E7%9A%84%E5%88%86%E7%B1%BB"><span class="toc-number">1.5.</span> <span class="toc-text">3.5 索引的分类</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-6-%E4%BD%BF%E7%94%A8%E8%A7%84%E5%88%99"><span class="toc-number">1.6.</span> <span class="toc-text">3.6 使用规则</span></a></li></ol></li></ol>
       
   </div>
 </div>
