@@ -1,0 +1,725 @@
+
+  <!DOCTYPE html>
+  <html lang="zh-CN"  >
+  <head>
+  <meta charset="utf-8">
+  
+
+  
+
+  
+
+  
+  <script>window.icon_font = '4552607_tq6stt6tcg';window.clipboard_tips = {"success":"复制成功(*^▽^*)","fail":"复制失败 (ﾟ⊿ﾟ)ﾂ","copyright":{"enable":false,"count":50,"content":"本文版权：本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！"}};</script>
+  
+  
+  <title>
+    Redis数据结构 |
+    
+    改bug的龙哥的博客
+  </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin><link rel="preload" as="style" href="https://fonts.googleapis.com/css?family=Mulish:400,400italic,700,700italic%7CNoto%20Serif%20SC:400,400italic,700,700italic&display=swap"><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Mulish:400,400italic,700,700italic%7CNoto%20Serif%20SC:400,400italic,700,700italic&display=swap" media="print" onload="this.media&#x3D;&#39;all&#39;">
+  
+    <link rel="preload" href="//at.alicdn.com/t/c/font_4552607_tq6stt6tcg.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  
+  
+    
+<link rel="stylesheet" href="/css/loader.css">
+
+  
+  
+    <meta name="description" content="8.1 数据结构8.1.1 动态字符串redis的key保存的是字符串，value保存的是字符串或者字符串的集合 redis没有直接使用C语言中的字符串，因为C语言字符串存在很多问题：通过字符串长度需要通过运算；非二进制安全；不可修改。 redis构建了新的字符串结构：简单动态字符串SDS   假如我们要给SDS追加一段字符串“，Ay”,这里首先会申请新内存空间：◆如果新字符串小于1M,则新空间为">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis数据结构">
+<meta property="og:url" content="http://example.com/2024/12/02/Redis%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/index.html">
+<meta property="og:site_name" content="改bug的龙哥的博客">
+<meta property="og:description" content="8.1 数据结构8.1.1 动态字符串redis的key保存的是字符串，value保存的是字符串或者字符串的集合 redis没有直接使用C语言中的字符串，因为C语言字符串存在很多问题：通过字符串长度需要通过运算；非二进制安全；不可修改。 redis构建了新的字符串结构：简单动态字符串SDS   假如我们要给SDS追加一段字符串“，Ay”,这里首先会申请新内存空间：◆如果新字符串小于1M,则新空间为">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005077.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005048.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005050.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005022.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005028.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005020.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005540.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005693.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005798.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005004.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005179.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005373.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005415.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005564.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005699.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005804.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005856.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005027.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005173.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005386.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005870.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005969.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005059.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005188.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005369.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005457.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005548.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005661.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005776.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005876.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005089.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005226.png">
+<meta property="article:published_time" content="2024-12-02T13:23:00.000Z">
+<meta property="article:modified_time" content="2024-12-08T12:06:34.969Z">
+<meta property="article:author" content="改bug的龙哥">
+<meta property="article:tag" content="Redis数据结构">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005077.png">
+  
+  
+    <link rel="alternate" href="/atom.xml" title="改bug的龙哥的博客" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/images/favicon.ico">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  <link rel="preload" href="https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  
+  
+  
+  
+    
+<script src="https://npm.webcache.cn/pace-js@1.2.4/pace.min.js" integrity="sha384-k6YtvFUEIuEFBdrLKJ3YAUbBki333tj1CSUisai5Cswsg9wcLNaPzsTHDswp4Az8" crossorigin="anonymous"></script>
+
+  
+  
+    
+<link rel="stylesheet" href="https://npm.webcache.cn/@reimujs/aos@0.1.0/dist/aos.css">
+
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+  <body>
+    
+  <div id='loader'>
+    <div class="loading-left-bg loading-bg"></div>
+    <div class="loading-right-bg loading-bg"></div>
+    <div class="spinner-box">
+      <div class="loading-taichi">
+        <svg width="150" height="150" viewBox="0 0 1024 1024" class="icon" version="1.1" xmlns="https://www.w3.org/2000/svg" shape-rendering="geometricPrecision">
+          <path d="M303.5 432A80 80 0 0 1 291.5 592A80 80 0 0 1 303.5 432z" fill="#ff5252" />
+          <path d="M512 65A447 447 0 0 1 512 959L512 929A417 417 0 0 0 512 95A417 417 0 0 0 512 929L512 959A447 447 0 0 1 512 65z 
+         M512 95A417 417 0 0 1 929 512A208.5 208.5 0 0 1 720.5 720.5L720.5 592A80 80 0 0 0 720.5 432A80 80 0 0 0 720.5 592L720.5 720.5A208.5 208.5 0 0 1 512 512A208.5 208.5 0 0 0 303.5 303.5A208.5 208.5 0 0 0 95 512A417 417 0 0 1 512 95z" fill="#ff5252" />
+        </svg>
+      </div>
+      <div class="loading-word">少女祈祷中...</div>
+    </div>
+  </div>
+  </div>
+  <script>
+    var time = null;
+    var startLoading = () => {
+      time = Date.now();
+      document.getElementById('loader').classList.remove("loading");
+    }
+    var endLoading = () => {
+      if (!time) {
+        document.body.style.overflow = 'auto';
+        document.getElementById('loader').classList.add("loading");
+      } else {
+        if (Date.now() - time > 500) {
+          time = null;
+          document.body.style.overflow = 'auto';
+          document.getElementById('loader').classList.add("loading");
+        } else {
+          setTimeout(endLoading, 500 - (Date.now() - time));
+          time = null;
+        }
+      }
+    }
+    window.addEventListener('DOMContentLoaded', endLoading);
+    document.getElementById('loader').addEventListener('click', endLoading);
+  </script>
+
+<div id="copy-tooltip" style="pointer-events: none; opacity: 0; transition: all 0.2s ease; position: fixed;top: 50%;left: 50%;z-index: 999;transform: translate(-50%, -50%);color: white;background: rgba(0, 0, 0, 0.5);padding: 10px 15px;border-radius: 10px;">
+</div>
+
+
+    <div id="container">
+      <div id="wrap">
+        <div id="header-nav">
+  <nav id="main-nav">
+    
+      <span class="main-nav-link-wrap">
+        <div class="main-nav-icon icon-taichi"></div>
+        <a class="main-nav-link" href="/">首页</a>
+      </span>
+    
+      <span class="main-nav-link-wrap">
+        <div class="main-nav-icon icon-taichi"></div>
+        <a class="main-nav-link" href="/archives">归档</a>
+      </span>
+    
+      <span class="main-nav-link-wrap">
+        <div class="main-nav-icon icon-taichi"></div>
+        <a class="main-nav-link" href="/about">关于</a>
+      </span>
+    
+      <span class="main-nav-link-wrap">
+        <div class="main-nav-icon icon-taichi"></div>
+        <a class="main-nav-link" href="/friend">友链</a>
+      </span>
+    
+    <a id="main-nav-toggle" class="nav-icon"></a>
+  </nav>
+  <nav id="sub-nav">
+    
+      <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS 订阅" target="_blank"></a>
+    
+    
+    
+  </nav>
+</div>
+<header id="header">
+  
+    
+      <img fetchpriority="high" src="/images/banner.webp" alt="Redis数据结构">
+    
+  
+  <div id="header-outer">
+    <div id="header-title">
+      
+        
+        
+          <a href="/" id="logo">
+            <h1 data-aos="slide-up">Redis数据结构</h1>
+          </a>
+        
+      
+      
+        
+        <h2 id="subtitle-wrap" data-aos="slide-down">
+          
+        </h2>
+      
+    </div>
+  </div>
+</header>
+
+        <div id="content">
+          
+          <section id="main"><article id="post-Redis数据结构" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-inner" data-aos="fade-up">
+    <div class="article-meta">
+      <div class="article-date">
+  <a href="/2024/12/02/Redis%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" class="article-date-link" data-aos="zoom-in">
+    <time datetime="2024-12-02T13:23:00.000Z" itemprop="datePublished">2024-12-02</time>
+    <time style="display: none;" id="post-update-time">2024-12-08</time>
+  </a>
+</div>
+
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Redis/" data-aos="zoom-in">Redis</a>
+  </div>
+
+
+    </div>
+    <div class="hr-line"></div>
+    
+
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+      
+        <h1 id="8-1-数据结构"><a href="#8-1-数据结构" class="headerlink" title="8.1 数据结构"></a>8.1 数据结构</h1><h2 id="8-1-1-动态字符串"><a href="#8-1-1-动态字符串" class="headerlink" title="8.1.1 动态字符串"></a>8.1.1 动态字符串</h2><p>redis的key保存的是字符串，value保存的是字符串或者字符串的集合</p>
+<p>redis没有直接使用C语言中的字符串，因为C语言字符串存在很多问题：通过字符串长度需要通过运算；非二进制安全；不可修改。</p>
+<p>redis构建了新的字符串结构：简单动态字符串SDS</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005077.png" alt="image-20241208142556366"></p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005048.png" alt="image-20241208142607900"></p>
+<p>假如我们要给SDS追加一段字符串“，Ay”,这里首先会申请新内存空间：<br>◆如果新字符串小于1M,则新空间为扩展后字符串长度的两倍+1：<br>◆如果新字符串大于1M,则新空间为扩展后字符串长度+1M+1。称为内存预分配。</p>
+<p>优点：</p>
+<p>获取字符串长度的时间复杂度为0(1)<br>支持动态扩容<br>减少内存分配次数<br>二进制安全</p>
+<p>8.1.2 intset</p>
+<p>intset是redis中set集合的一种实现方式，基于整数数组来实现，并且具备长度可变、有序等特征</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005050.png" alt="image-20241208143141044"></p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005022.png" alt="image-20241208143258096"></p>
+<p>redis会将intset中所有的证书按照升序依次保存在contents数组中</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005028.png" alt="image-20241208143439024"></p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005020.png" alt="image-20241208144636533"></p>
+<p>我们向该其中添加一个数字：S0000,这个数字超出了int16t的范围，intset会自动升级编码方式到合适的大小。<br>以当前案例来说流程如下：<br>①升级编码为INTSET_ENC_INT32,每个整数占4字节，并按照新的编码方式及元素个数扩容数组<br>②倒序依次将数组中的元素拷贝到扩容后的正确位置<br>③将待添加的元素放入数组末尾</p>
+<p>④最后，将inset的encoding属性改为INTSET_ENC_INT32,将Length属性改为4</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005540.png" alt="image-20241208144726525"></p>
+<h2 id="8-1-3-Dict"><a href="#8-1-3-Dict" class="headerlink" title="8.1.3 Dict"></a>8.1.3 Dict</h2><p>保存映射的关系，通过dict实现。</p>
+<p>dict由三部分组成：哈希表、哈希节点、字典。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005693.png" alt="image-20241208150517160"></p>
+<p>当我们向Dict添加键值对时，Redis首先根据key计算出hash值(h),然后利用h&amp;sizemask来计算元素应该存储到数<br>组中的哪个索引位置。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005798.png" alt="image-20241208151332683"></p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005004.png" alt="image-20241208151608171"></p>
+<p>dict扩容</p>
+<p>Dict中的HashTable就是数组结合单向链表的实现，当集合中元素较多时，必然导致哈希冲突增多，链表过长，则查询效率会大大降低。</p>
+<p>Dict在每次新增键值对时都会检查负载因子(LoadFactor&#x3D;used&#x2F;size),满足以下两种情况时会触发哈希表扩容：<br>◆哈希表的LoadFactor&gt;&#x3D;1,并且服务器没有执行BGSAVE或者BGREWRITEAOF等后台进程；<br>◆哈希表的LoadFactor&gt;5;</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005179.png" alt="image-20241208153616008"></p>
+<p>不管是扩容还是收缩，必定会创建新的哈希表，导致哈希表的size和sizemask变化，而key的查询与sizemask有关。因此必须对哈希表中的每一个key重新计算索引，插入新的哈希表，这个过程称为rehash。过程是这样的：<br>①计算新hash表的realeSize,值取决于当前要做的是扩容还是收缩：<br>◆如果是扩容，则新size为第一个大于等于dict.ht[0].used+1的2川<br>◆如果是收缩，则新size为第一个大于等于dict.ht[O].used的2n(不得小于4)】<br>②按照新的realeSize申请内存空间，创建dictht,并赋值给dict.ht[]<br>③设置dict.rehashidx&#x3D;0,标示开始rehash<br>④将dict.ht[o]中的每一个dictEntry都rehash到dict.ht[1】<br>⑤将dict.ht[1]赋值给dict.ht[O],给dict.ht[1]初始化为空哈希表，释放原来的dict.ht[Oj的内存</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005373.png" alt="image-20241208155206579"></p>
+<p>Dict的rehash并不是一次性完成的。试想一下，如果Dict中包含数百万的entry,要在一次rehash完成，极有可能导致<br>主线程阻塞。因此Dict的rehash是分多次、渐进式的完成，因此称为渐进式rehash。流程如下：<br>①计算新hash表的size,值取决于当前要做的是扩容还是收缩：<br>◆如果是扩容，则新size为第一个大于等于dict.ht0l.u5ed+1的2n<br>◆如果是收缩，则新size为第一个大于等于dict.ht[0.used的2n(不得小于4)<br>②按照新的size申请内存空间，创建dictht,并赋值给dict.ht[1]<br>③设置dict.rehashidx&#x3D;0,标示开始rehash<br>④每次执行新增、查询、修改、翻除操作时，都检查一下dict.rehashidx是否大于-1，如果是则dict.hO.table[rehashidx)的entry链表rehash到dict.ht(】,并且将rehashidx++。直至dict.hto]的所有数据都rehash到dict.htf]<br>⑤将dict,ht[1]赋值给dict.ht[o],给dict.ht[1]初始化为空哈希表，释放原来的dict.ht[oj的内存</p>
+<p>将rehashidx赋值为-1，代表rehash结束<br>⑦在rehashi过程中，新增操作，则直接写入ht1],查询、修改和副除则会在dict.ht(o和dict.ht[1]依次查找并执行。这样可以确保htO]的数据只减不增，随着rehash最终为空</p>
+<h2 id="8-1-4-ZipList"><a href="#8-1-4-ZipList" class="headerlink" title="8.1.4 ZipList"></a>8.1.4 ZipList</h2><p>ZipList：特殊的双端列表，由一系列特殊编码的连续内存块组成。可以任意一端进行压入&#x2F;弹出操作，并且操作的时间复杂度是O(1)</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005415.png" alt="image-20241208161647873"></p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005564.png" alt="image-20241208161754392"></p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005699.png" alt="image-20241208162036080"></p>
+<p>ZipList中所有存储长度的数值均采用小端字节序，即低位字节在前，高位字节在后。例如：<br>数值0x1234，采用小端字节序后实际存储值为：0x3412</p>
+<p>ziplistentry中的encoding编码分为字符串和整数两种：</p>
+<p>字符串：如果encoding是以00、01或者10开头，则证明content是字符串</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005804.png" alt="image-20241208162725101"></p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005856.png" alt="image-20241208162912808"></p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005027.png" alt="image-20241208163132333"></p>
+<p>ziplist的连锁更新问题</p>
+<p>ZipList的每个Enty都包含previous_.enty_length来记录上一个节点的大小，长度是1个或5个字节：<br>◆如果前一节点的长度小于254字节，则采用1个字节来保存这个长度值<br>◆如果前一节点的长度大于等于254字节，则采用5个字节来保存这个长度值，第一个字节为0xf,后四个字节才是真<br>实长度数据</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005173.png" alt="image-20241208163954418"></p>
+<p>ZipListi这种特殊情况下产生的连续多次空间扩展操作称之为连锁更新（Cascade Update)。新增、制除都可能导致连锁更新的发生。</p>
+<p>压缩列表的可以看做一种连续内存空间的”双向链表<br>列表的节点之间不是通过指针连接，而是记录上一节点和本节点长度来寻址，内存占用较低<br>如果列表数据过多，导致链表过长，可能影响查询性能<br>增或删较大数据时有可能发生连续更新问题</p>
+<h2 id="8-1-5-quicklist"><a href="#8-1-5-quicklist" class="headerlink" title="8.1.5 quicklist"></a>8.1.5 quicklist</h2><p>问题1：ZipList虽然节省内存，但申请内存必须是连续空间，如果内存占用较多，申请内存效率很低。怎么办？<br>√为了缓解这个问题，我们必须限制ZipList的长度和enty大小。<br>问题2：但是我们要存储大量数据，超出了ZipListi最佳的上限该怎么办？<br>√我们可以创建多个ZipList来分片存储数据。<br>问题3：数据拆分后比较分散，不方便管理和查找，这多个ZipList如何建立联系？<br>√Redis在3.2版本引入了新的数据结构QuickList,它是一个双端链表，只不过链表中的每个节点都是一个ZipList。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005386.png" alt="image-20241208170422217"></p>
+<p>为了避免QuickList中的每个ZipList中entryi过多，Redis提供了一个配置项：list-max-ziplist-size来限制。<br>◆如果值为正，则代表ZipList的允许的entry个数的最大值<br>◆如果值为负，则代表ZipList的最大内存大小，分5种情况：<br>①-1：每个ZipList的内存占用不能超过4kb<br>②-2：每个ZipList的内存占用不能超过8kb<br>③-3：每个ZipList的内存占用不能超过16kb<br>④-4：每个ZipList的内存占用不能超过32kb<br>⑤-5：每个ZipList的内存占用不能超过64kb<br>其赋认值为-2：</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005870.png" alt="image-20241208170704359"></p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005969.png" alt="image-20241208170834950"></p>
+<p>是一个节点为ZipList的双端链表<br>节点采用ZipList,解决了传统链表的内存占用问题<br>控制了ZipList大小，解决连续内存空间申请效率问题<br>中间节点可以压缩，进一步节省了内存</p>
+<h2 id="8-1-6-skiplist"><a href="#8-1-6-skiplist" class="headerlink" title="8.1.6 skiplist"></a>8.1.6 skiplist</h2><p>skiplist是链表，但是和链表的差异在于：</p>
+<p>元素按照升序排列存储；节点可能包含多个指针，指针跨度不同。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005059.png" alt="image-20241208171411994"></p>
+<p>SkipList(跳表)首先是链表，但与传统链表相比有几点差异：<br>◆元素按照升序排列存储<br>◆节点可能包含多个指针，指针跨度不同。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005188.png" alt="image-20241208171800668"></p>
+<p>跳跃表是一个双向链表，每个节点都包含score和ele值<br>节点按照score值排序，score值一样则按照ele字典排序<br>每个节点都可以包含多层指针，层数是1到32之间的随机数<br>不同层指针到下一个节点的跨度不同，层级越高，跨度越大<br>增删改查效率与红黑树基本一致，实现却更简单</p>
+<h2 id="8-1-7-RedisObject"><a href="#8-1-7-RedisObject" class="headerlink" title="8.1.7 RedisObject"></a>8.1.7 RedisObject</h2><p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005369.png" alt="image-20241208172932325"></p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005457.png" alt="image-20241208173300425"></p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005548.png" alt="image-20241208173453346"></p>
+<h2 id="8-1-8-五种数据结构"><a href="#8-1-8-五种数据结构" class="headerlink" title="8.1.8 五种数据结构"></a>8.1.8 五种数据结构</h2><p>String: 编码方式是RAW，基于简单动态字符串（SDS）实现，存储上限为512mb</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005661.png" alt="image-20241208193554484"></p>
+<p>如果存储的SDS长度小于44字节，则会采用EMBSET编码，此时的object head与SDS是一段连续空间。申请内存时候只需要调用一次内存分配函数，效率更高。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005776.png" alt="image-20241208193807169"></p>
+<p>如果存储的字符串是整数值，并且大小在LONG MAX范围内，则会采用INT编码：直接将数据保存在RedisObject的ptr指针位置（刚好8字节），不再需要SDS了。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005876.png" alt="image-20241208194051843"></p>
+<p>List：</p>
+<p>LinkedList:普通链表，可以从双端访问，内存占用较高，内存碎片较多<br>ZipList:压缩列表，可以从双端访问，内存占用低，存储上限低<br>Quicklist:LinkedList+ZipList,可以从双端访问，内存占用较低，包含多个ZipList,存储上限高</p>
+<p>Set：</p>
+<p>不保证有序性、保证元素唯一、求交集并集和补集</p>
+<p>可以看出，St对查询元素的效率要求非常高，思考一下，什么样的数据结构可以满足？<br>◆HashTable,也就是Redis中的Dict,不过Dict是双列集合（可以存键、值对）</p>
+<p>Set是Redis中的集合，不一定确保元素有序，可以满足元素唯一、查询效率要求极高。</p>
+<p>◆为了查询效率和唯一性，set采用HT编码(Dict)。Dict中的key用来存储元素，value统一为null。<br>◆当存储的所有数据都是整数，并且元素数量不超过set-max-intset-.entries时，Set会采用IntSet编码，以节省内存。</p>
+<p>ZSet：</p>
+<p>sorted set</p>
+<p>其中每一个元素都需要指定一个score值和memberf值：可以根据score值排序后，member必须唯一、可以根据member查询分数。</p>
+<p>因此，ZSet底层数据结构必须满足键值存储、键必须唯一、可排序这几个需求。之前学习的那种编码结构可以满足？<br>◆SkipList:可以排序，并且可以同时存储score和ele值(member)</p>
+<p>◆HT(Dict)：可以键值存储，并且可以根据key找value</p>
+<p>当元素数量不多时，HT和SkipList的优势不明显，而且更耗内存。因此zset还会采用ZipList结构来节省内存，不过需要<br>同时满足两个条件：<br>①元素数量小于zset_max_ziplist_entries,.默认值128<br>②每个元素都小于zset_max_ziplist_value字节，默认值64</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005089.png" alt="image-20241208195909645"></p>
+<p>hash</p>
+<p>Hash结构与Redis中的Zset非常类似：<br>都是键值存储<br>都需求根据键获取值<br>键必须唯一</p>
+<p>zset的键是member,值是score;hash的键和值都是任意值<br>zset要根据score排序；hash则无需排序</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412082005226.png" alt="image-20241208200254472"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+      
+      
+      
+      
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item" data-aos="zoom-in"><a class="article-tag-list-link" href="/tags/Redis%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" rel="tag">Redis数据结构</a></li></ul>
+
+
+    </footer>
+  </div>
+  
+  <nav id="article-nav" data-aos="fade-up">
+    
+      <div class="article-nav-link-wrap article-nav-link-left">
+        
+          
+          
+            <img data-src="/images/banner.webp" data-sizes="auto" alt="MySQL锁" class="lazyload">
+          
+        
+        <a href="/2024/12/02/%E9%94%81/"></a>
+        <div class="article-nav-caption">前一篇</div>
+        <h3 class="article-nav-title">
+          
+            MySQL锁
+          
+        </h3>
+      </div>
+    
+    
+    <div class="article-nav-link-wrap article-nav-link-right">
+      
+        
+        
+          <img data-src="/images/banner.webp" data-sizes="auto" alt="Java虚拟机类加载器" class="lazyload">
+        
+      
+      <a href="/2024/12/01/%E8%99%9A%E6%8B%9F%E6%9C%BA%E4%B9%8B%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8/"></a>
+      <div class="article-nav-caption">后一篇</div>
+      <h3 class="article-nav-title">
+        
+          Java虚拟机类加载器
+        
+      </h3>
+    </div>
+    
+  </nav>
+
+
+</article>
+
+
+
+
+
+
+</section>
+          
+            <aside id="sidebar">
+  <div class="sidebar-wrapper wrap-sticky">
+    <div class="sidebar-wrap" data-aos="fade-up">
+      
+        <div class="sidebar-toc-sidebar"><div class="sidebar-toc">
+  <h3 class="toc-title">文章目录</h3>
+  <div class="sidebar-toc-wrapper toc-div-class" >
+      
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#8-1-%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="toc-number">1.</span> <span class="toc-text">8.1 数据结构</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#8-1-1-%E5%8A%A8%E6%80%81%E5%AD%97%E7%AC%A6%E4%B8%B2"><span class="toc-number">1.1.</span> <span class="toc-text">8.1.1 动态字符串</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-1-3-Dict"><span class="toc-number">1.2.</span> <span class="toc-text">8.1.3 Dict</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-1-4-ZipList"><span class="toc-number">1.3.</span> <span class="toc-text">8.1.4 ZipList</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-1-5-quicklist"><span class="toc-number">1.4.</span> <span class="toc-text">8.1.5 quicklist</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-1-6-skiplist"><span class="toc-number">1.5.</span> <span class="toc-text">8.1.6 skiplist</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-1-7-RedisObject"><span class="toc-number">1.6.</span> <span class="toc-text">8.1.7 RedisObject</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-1-8-%E4%BA%94%E7%A7%8D%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="toc-number">1.7.</span> <span class="toc-text">8.1.8 五种数据结构</span></a></li></ol></li></ol>
+      
+  </div>
+</div>
+</div>
+        <div class="sidebar-common-sidebar hidden"><div class="sidebar-author">
+  <img data-src="/avatar/avatar.webp" data-sizes="auto" alt="改bug的龙哥" class="lazyload">
+  <div class="sidebar-author-name">改bug的龙哥</div>
+  <div class="sidebar-description"></div>
+</div>
+<div class="sidebar-state">
+  <div class="sidebar-state-article">
+    <div>文章</div>
+    <div class="sidebar-state-number">11</div>
+  </div>
+  <div class="sidebar-state-category">
+    <div>分类</div>
+    <div class="sidebar-state-number">3</div>
+  </div>
+  <div class="sidebar-state-tag">
+    <div>标签</div>
+    <div class="sidebar-state-number">7</div>
+  </div>
+</div>
+<div class="sidebar-social">
+  
+</div>
+<div class="sidebar-menu">
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/" aria-label="首页"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">首页</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/archives" aria-label="归档"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">归档</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/about" aria-label="关于"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">关于</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/friend" aria-label="友链"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">友链</div>
+    </div>
+  
+</div>
+</div>
+      
+      
+        <div class="sidebar-btn-wrapper" style="position:static">
+          <div class="sidebar-toc-btn current"></div>
+          <div class="sidebar-common-btn"></div>
+        </div>
+      
+    </div>
+  </div>
+
+  
+</aside>
+
+          
+        </div>
+        <footer id="footer">
+  <div style="width: 100%; overflow: hidden">
+    <div class="footer-line"></div>
+  </div>
+  <div id="footer-info">
+    
+    <div>
+      <span class="icon-copyright"></span>
+      2020-2024
+      <span class="footer-info-sep"></span>
+      改bug的龙哥
+    </div>
+    
+      <div>
+        基于&nbsp;<a href="https://hexo.io/" rel="noopener external nofollow noreferrer" target="_blank">Hexo</a>&nbsp;
+        Theme.<a href="https://github.com/D-Sketon/hexo-theme-reimu" rel="noopener external nofollow noreferrer" target="_blank">Reimu</a>
+      </div>
+    
+    
+      <div>
+        <span class="icon-brush"></span>
+        22.2k
+        &nbsp;|&nbsp;
+        <span class="icon-coffee"></span>
+        01:12
+      </div>
+    
+    
+    
+    
+      <div>
+        <span class="icon-eye"></span>
+        <span id="busuanzi_container_site_pv">总访问量&nbsp;<span id="busuanzi_value_site_pv"></span></span>
+        &nbsp;|&nbsp;
+        <span class="icon-user"></span>
+        <span id="busuanzi_container_site_uv">总访客量&nbsp;<span id="busuanzi_value_site_uv"></span></span>
+      </div>
+    
+  </div>
+</footer>
+
+        <div class="sidebar-top">
+          <img src="/images/taichi.png" height="50" width="50" alt="backtop" />
+          <div class="arrow-up"></div>
+        </div>
+        <div id="mask"></div>
+      </div>
+      <nav id="mobile-nav">
+  <div class="sidebar-wrap">
+    
+      <div class="sidebar-toc-sidebar"><div class="sidebar-toc">
+  <h3 class="toc-title">文章目录</h3>
+  <div class="sidebar-toc-wrapper toc-div-class" >
+      
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#8-1-%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="toc-number">1.</span> <span class="toc-text">8.1 数据结构</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#8-1-1-%E5%8A%A8%E6%80%81%E5%AD%97%E7%AC%A6%E4%B8%B2"><span class="toc-number">1.1.</span> <span class="toc-text">8.1.1 动态字符串</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-1-3-Dict"><span class="toc-number">1.2.</span> <span class="toc-text">8.1.3 Dict</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-1-4-ZipList"><span class="toc-number">1.3.</span> <span class="toc-text">8.1.4 ZipList</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-1-5-quicklist"><span class="toc-number">1.4.</span> <span class="toc-text">8.1.5 quicklist</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-1-6-skiplist"><span class="toc-number">1.5.</span> <span class="toc-text">8.1.6 skiplist</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-1-7-RedisObject"><span class="toc-number">1.6.</span> <span class="toc-text">8.1.7 RedisObject</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-1-8-%E4%BA%94%E7%A7%8D%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="toc-number">1.7.</span> <span class="toc-text">8.1.8 五种数据结构</span></a></li></ol></li></ol>
+      
+  </div>
+</div>
+</div>
+      <div class="sidebar-common-sidebar hidden"><div class="sidebar-author">
+  <img data-src="/avatar/avatar.webp" data-sizes="auto" alt="改bug的龙哥" class="lazyload">
+  <div class="sidebar-author-name">改bug的龙哥</div>
+  <div class="sidebar-description"></div>
+</div>
+<div class="sidebar-state">
+  <div class="sidebar-state-article">
+    <div>文章</div>
+    <div class="sidebar-state-number">11</div>
+  </div>
+  <div class="sidebar-state-category">
+    <div>分类</div>
+    <div class="sidebar-state-number">3</div>
+  </div>
+  <div class="sidebar-state-tag">
+    <div>标签</div>
+    <div class="sidebar-state-number">7</div>
+  </div>
+</div>
+<div class="sidebar-social">
+  
+</div>
+<div class="sidebar-menu">
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/" aria-label="首页"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">首页</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/archives" aria-label="归档"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">归档</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/about" aria-label="关于"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">关于</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/friend" aria-label="友链"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">友链</div>
+    </div>
+  
+</div>
+</div>
+    
+  </div>
+  
+    <div class="sidebar-btn-wrapper">
+      <div class="sidebar-toc-btn current"></div>
+      <div class="sidebar-common-btn"></div>
+    </div>
+  
+</nav>
+
+    </div>
+    
+    
+<script src="https://npm.webcache.cn/lazysizes@5.3.2/lazysizes.min.js" integrity="sha384-3gT&#x2F;vsepWkfz&#x2F;ff7PpWNUeMzeWoH3cDhm&#x2F;A8jM7ouoAK0&#x2F;fP&#x2F;9bcHHR5kHq2nf+e" crossorigin="anonymous"></script>
+
+
+<script src="https://npm.webcache.cn/clipboard@2.0.11/dist/clipboard.min.js" integrity="sha384-J08i8An&#x2F;QeARD9ExYpvphB8BsyOj3Gh2TSh1aLINKO3L0cMSH2dN3E22zFoXEi0Q" crossorigin="anonymous"></script>
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+  
+<script src="/js/aos.js"></script>
+
+  <script>
+    var aosInit = () => {
+      AOS.init({
+        duration: 1000,
+        easing: "ease",
+        once: true,
+        offset: 50,
+      });
+    };
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', aosInit);
+    } else {
+      aosInit();
+    }
+  </script>
+
+
+
+<script src="/js/pjax_script.js" data-pjax></script>
+
+
+
+
+
+
+
+  
+<script src="https://npm.webcache.cn/mouse-firework@0.0.6/dist/index.umd.js" integrity="sha384-vkGvf25gm1C1PbcoD5dNfc137HzNL&#x2F;hr1RKA5HniJOaawtvUmH5lTVFgFAruE9Ge" crossorigin="anonymous"></script>
+
+  <script>
+    window.firework && window.firework(JSON.parse('{"excludeElements":["a","button"],"particles":[{"shape":"circle","move":["emit"],"easing":"easeOutExpo","colors":["#ff5252","#ff7c7c","#ffafaf","#ffd0d0"],"number":20,"duration":[1200,1800],"shapeOptions":{"radius":[16,32],"alpha":[0.3,0.5]}},{"shape":"circle","move":["diffuse"],"easing":"easeOutExpo","colors":["#ff0000"],"number":1,"duration":[1200,1800],"shapeOptions":{"radius":20,"alpha":[0.2,0.5],"lineWidth":6}}]}'))
+  </script>
+
+
+
+
+
+
+
+
+<div id="lazy-script">
+  <div>
+    
+    
+      
+        
+<script src="/js/insert_highlight.js" data-pjax></script>
+
+      
+    
+    
+      <script type="module" data-pjax>
+        const PhotoSwipeLightbox = (await safeImport("https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe-lightbox.esm.min.js", "sha384-DiL6M/gG+wmTxmCRZyD1zee6lIhawn5TGvED0FOh7fXcN9B0aZ9dexSF/N6lrZi/")).default;
+        
+        const pswp = () => {
+          if (_$$('.article-entry a.article-gallery-item').length > 0) {
+            new PhotoSwipeLightbox({
+              gallery: '.article-entry',
+              children: 'a.article-gallery-item',
+              pswpModule: () => safeImport("https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe.esm.min.js", "sha384-WkkO3GCmgkC3VQWpaV8DqhKJqpzpF9JoByxDmnV8+oTJ7m3DfYEWX1fu1scuS4+s")
+            }).init();
+          }
+          if(_$$('.article-gallery a.article-gallery-item').length > 0) {
+            new PhotoSwipeLightbox({
+              gallery: '.article-gallery',
+              children: 'a.article-gallery-item',
+              pswpModule: () => safeImport("https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe.esm.min.js", "sha384-WkkO3GCmgkC3VQWpaV8DqhKJqpzpF9JoByxDmnV8+oTJ7m3DfYEWX1fu1scuS4+s")
+            }).init();
+          }
+          window.lightboxStatus = 'done';
+          window.removeEventListener('lightbox:ready', pswp);
+        }
+        if(window.lightboxStatus === 'ready') {
+          pswp()
+        } else {
+          window.addEventListener('lightbox:ready', pswp);
+        }
+      </script>
+      
+
+
+
+
+
+
+
+
+    
+  </div>
+</div>
+
+
+  <script>
+    console.log(String.raw`%c 
+ ______     ______     __     __    __     __  __    
+/\  == \   /\  ___\   /\ \   /\ "-./  \   /\ \/\ \   
+\ \  __<   \ \  __\   \ \ \  \ \ \-./\ \  \ \ \_\ \  
+ \ \_\ \_\  \ \_____\  \ \_\  \ \_\ \ \_\  \ \_____\ 
+  \/_/ /_/   \/_____/   \/_/   \/_/  \/_/   \/_____/ 
+                                                  
+`,'color: #ff5252;')
+    console.log('%c Theme.Reimu v' + '0.3.5' + ' %c https://github.com/D-Sketon/hexo-theme-reimu ', 'color: white; background: #ff5252; padding:5px 0;', 'padding:4px;border:1px solid #ff5252;')
+  </script>
+  
+
+
+
+  
+<script src="https://npm.webcache.cn/busuanzi@2.3.0/bsz.pure.mini.js" integrity="sha384-0M75wtSkhjIInv4coYlaJU83+OypaRCIq2SukQVQX04eGTCBXJDuWAbJet56id+S" crossorigin="anonymous" async></script>
+
+
+
+
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      for (let registration of registrations) {
+        registration.unregister();
+      }
+    });
+  }
+</script>
+
+  </body>
+  </html>
+

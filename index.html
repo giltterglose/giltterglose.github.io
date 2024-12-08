@@ -476,10 +476,48 @@ MySQL中的锁，按照锁的粒度分，分为以下三类：1.全局锁：锁�
     <div class="post-wrapper">
   <div class="post-wrap-left" data-aos="fade-up">
     
-      <a class="post-link" href="/2024/12/01/%E8%99%9A%E6%8B%9F%E6%9C%BA%E4%B9%8B%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8/" aria-label="Java虚拟机类加载器"></a>
+      <a class="post-link" href="/2024/12/02/Redis%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" aria-label="Redis数据结构"></a>
     
     
     <div class="post-cover-left">
+      
+        
+        
+          <img data-src="/images/banner.webp" data-sizes="auto" alt="Redis数据结构" class="lazyload">
+        
+      
+    </div>
+    <div class="post-info">
+      <div class="post-meta">
+        <span><span class="icon-calendar"></span>2024-12-02</span>
+        <span><span class="icon-pencil"></span>2.8k 字</span>
+        <span><span class="icon-clock"></span>10 分钟</span>
+      </div>
+      <h2 class="post-title">Redis数据结构</h2>
+      <article class="post-article">
+        
+          8.1 数据结构8.1.1 动态字符串redis的key保存的是字符串，value保存的是字符串或者字符串的集合
+redis没有直接使用C语言中的字符串，因为C语言字符串存在很多问题：通过字符串长度需要通过运算；非二进制安全；不可修改。
+redis构建了新的字符串结构：简单动态字符串SDS
+
+
+假如我们要给SDS追加一段字符串“，Ay”,这里首先会申请新内存空间：◆如果新字符串小于1M,则新空间为扩展后字符串长度的两倍+1：◆如果新字符串大于1M,则新空间为扩展后字符串长度+1M+1。称为内存预分配。
+优点：
+获取字符串长度的时间复杂度为0(1)支持动态扩容减少内存分配次数二进制安全
+8.1.
+        
+      </article>
+    </div>
+  </div>
+</div>
+  
+    <div class="post-wrapper">
+  <div class="post-wrap-right" data-aos="fade-up">
+    
+      <a class="post-link" href="/2024/12/01/%E8%99%9A%E6%8B%9F%E6%9C%BA%E4%B9%8B%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8/" aria-label="Java虚拟机类加载器"></a>
+    
+    
+    <div class="post-cover-right">
       
         
         
@@ -512,51 +550,12 @@ JDK8及之前的版本类加载器中的种类
   </div>
 </div>
   
-    <div class="post-wrapper">
-  <div class="post-wrap-right" data-aos="fade-up">
+
+
+  <nav id="page-nav" data-aos="fade-up">
     
-      <a class="post-link" href="/2024/11/29/Java%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%9F%BA%E7%A1%80%E7%AF%87/" aria-label="Java虚拟机基础篇"></a>
-    
-    
-    <div class="post-cover-right">
-      
-        
-        
-          <img data-src="/images/banner.webp" data-sizes="auto" alt="Java虚拟机基础篇" class="lazyload">
-        
-      
-    </div>
-    <div class="post-info">
-      <div class="post-meta">
-        <span><span class="icon-calendar"></span>2024-11-29</span>
-        <span><span class="icon-pencil"></span>2.2k 字</span>
-        <span><span class="icon-clock"></span>7 分钟</span>
-      </div>
-      <h2 class="post-title">Java虚拟机基础篇</h2>
-      <article class="post-article">
-        
-          Java虚拟机基础1.1 Java虚拟机认识jvm本质上是一个运行在计算机上的程序，他的职责是运行Java字节码文件
-
-jvm功能
-解释和运行：对字节码文件中的指令，实时解释成机器码，让计算机执行。
-内存管理：自动为对象、方法等分配内存；自动垃圾回收机制，回收不再使用的对象。
-即时编译：对热点代码进行优化，提升运行效率。
-即时编译的功能：
-
-性能不如C&amp;#x2F;C++，但是Java字节码可以运行在不同的jvm上，jvm需要实时解释虚拟机指令，不做任何优化性能不如C&amp;#x2F;C++。
-即时编译的
-
-常见的虚拟机
-
-常见JVM：Java虚拟机规范
-jvm规范由Oracle指定，内容包含了Jav
-        
-      </article>
-    </div>
-  </div>
-</div>
-  
-
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/">下一页 &raquo;</a>
+  </nav>
 
 
 </section>
@@ -573,15 +572,15 @@ jvm规范由Oracle指定，内容包含了Jav
 <div class="sidebar-state">
   <div class="sidebar-state-article">
     <div>文章</div>
-    <div class="sidebar-state-number">10</div>
+    <div class="sidebar-state-number">11</div>
   </div>
   <div class="sidebar-state-category">
     <div>分类</div>
-    <div class="sidebar-state-number">2</div>
+    <div class="sidebar-state-number">3</div>
   </div>
   <div class="sidebar-state-tag">
     <div>标签</div>
-    <div class="sidebar-state-number">6</div>
+    <div class="sidebar-state-number">7</div>
   </div>
 </div>
 <div class="sidebar-social">
@@ -646,10 +645,10 @@ jvm规范由Oracle指定，内容包含了Jav
     
       <div>
         <span class="icon-brush"></span>
-        19.4k
+        22.2k
         &nbsp;|&nbsp;
         <span class="icon-coffee"></span>
-        01:02
+        01:12
       </div>
     
     
@@ -683,15 +682,15 @@ jvm规范由Oracle指定，内容包含了Jav
 <div class="sidebar-state">
   <div class="sidebar-state-article">
     <div>文章</div>
-    <div class="sidebar-state-number">10</div>
+    <div class="sidebar-state-number">11</div>
   </div>
   <div class="sidebar-state-category">
     <div>分类</div>
-    <div class="sidebar-state-number">2</div>
+    <div class="sidebar-state-number">3</div>
   </div>
   <div class="sidebar-state-tag">
     <div>标签</div>
-    <div class="sidebar-state-number">6</div>
+    <div class="sidebar-state-number">7</div>
   </div>
 </div>
 <div class="sidebar-social">
