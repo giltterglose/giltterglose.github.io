@@ -514,36 +514,36 @@ redis构建了新的字符串结构：简单动态字符串SDS
     <div class="post-wrapper">
   <div class="post-wrap-right" data-aos="fade-up">
     
-      <a class="post-link" href="/2024/12/01/%E8%99%9A%E6%8B%9F%E6%9C%BA%E4%B9%8B%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8/" aria-label="Java虚拟机类加载器"></a>
+      <a class="post-link" href="/2024/12/02/Redis%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" aria-label="Redis网络模型"></a>
     
     
     <div class="post-cover-right">
       
         
         
-          <img data-src="/images/banner.webp" data-sizes="auto" alt="Java虚拟机类加载器" class="lazyload">
+          <img data-src="/images/banner.webp" data-sizes="auto" alt="Redis网络模型" class="lazyload">
         
       
     </div>
     <div class="post-info">
       <div class="post-meta">
-        <span><span class="icon-calendar"></span>2024-12-01</span>
-        <span><span class="icon-pencil"></span>2k 字</span>
-        <span><span class="icon-clock"></span>7 分钟</span>
+        <span><span class="icon-calendar"></span>2024-12-02</span>
+        <span><span class="icon-pencil"></span>1.9k 字</span>
+        <span><span class="icon-clock"></span>6 分钟</span>
       </div>
-      <h2 class="post-title">Java虚拟机类加载器</h2>
+      <h2 class="post-title">Redis网络模型</h2>
       <article class="post-article">
         
-          类加载器时Java的虚拟机提供给应用程序去实现获取类和接口字节码数据的技术。
-类加载器只参与加载过程中的字节码获取并加载到内存这一部分。
+          8.2 Redis网络模型8.2.1 用户空间和内核空间用户空间和内核空间：以Linux为例，内核都是Linux
 
-1.4.1 类加载器分类一类是Java代码中实现，一类是Java虚拟机底层源码实现。
+操作系统需要消耗一定的内核资源
+为了避免用户应用导致冲突甚至内核崩溃，用户应用与内核是分离的。
+进程的寻址空间会划分为内核空间和用户空间
 
-JDK8及之前的版本类加载器中的种类
-
-启动类加载器
-启动类加载器(Bootstrap ClassLoader)是由Hotspot虚拟机提供的、使用C++编写的类加载器。默认加载Java安装目录jre&amp;#x2F;lib下的类文件，比如rt与jar,tools,jar,resources,jar等。
-通过启动类加载器去加载用户jar包：放入jre&amp;#x2F;lib下进行扩
+用户空间只能执行受限命令，而且不能直接调用系统资源，必须通过内核提供接口来访问
+内核空间可以执行特权命令，执行系统的所有资源
+LiuX系统为了提高I&amp;#x2F;O效率，会在用户空间和内核空间都加入缓冲区：●写数据时，要把用户缓冲数据拷贝到内核缓冲区，然后写入设备●读数据时，要从设备读取数据到内核缓冲区，然后拷贝到用户缓冲区
+8.2.2 阻塞I
         
       </article>
     </div>
@@ -572,7 +572,7 @@ JDK8及之前的版本类加载器中的种类
 <div class="sidebar-state">
   <div class="sidebar-state-article">
     <div>文章</div>
-    <div class="sidebar-state-number">11</div>
+    <div class="sidebar-state-number">12</div>
   </div>
   <div class="sidebar-state-category">
     <div>分类</div>
@@ -580,7 +580,7 @@ JDK8及之前的版本类加载器中的种类
   </div>
   <div class="sidebar-state-tag">
     <div>标签</div>
-    <div class="sidebar-state-number">7</div>
+    <div class="sidebar-state-number">8</div>
   </div>
 </div>
 <div class="sidebar-social">
@@ -645,10 +645,10 @@ JDK8及之前的版本类加载器中的种类
     
       <div>
         <span class="icon-brush"></span>
-        22.2k
+        24.1k
         &nbsp;|&nbsp;
         <span class="icon-coffee"></span>
-        01:12
+        01:18
       </div>
     
     
@@ -682,7 +682,7 @@ JDK8及之前的版本类加载器中的种类
 <div class="sidebar-state">
   <div class="sidebar-state-article">
     <div>文章</div>
-    <div class="sidebar-state-number">11</div>
+    <div class="sidebar-state-number">12</div>
   </div>
   <div class="sidebar-state-category">
     <div>分类</div>
@@ -690,7 +690,7 @@ JDK8及之前的版本类加载器中的种类
   </div>
   <div class="sidebar-state-tag">
     <div>标签</div>
-    <div class="sidebar-state-number">7</div>
+    <div class="sidebar-state-number">8</div>
   </div>
 </div>
 <div class="sidebar-social">

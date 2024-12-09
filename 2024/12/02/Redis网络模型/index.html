@@ -1,0 +1,681 @@
+
+  <!DOCTYPE html>
+  <html lang="zh-CN"  >
+  <head>
+  <meta charset="utf-8">
+  
+
+  
+
+  
+
+  
+  <script>window.icon_font = '4552607_tq6stt6tcg';window.clipboard_tips = {"success":"复制成功(*^▽^*)","fail":"复制失败 (ﾟ⊿ﾟ)ﾂ","copyright":{"enable":false,"count":50,"content":"本文版权：本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！"}};</script>
+  
+  
+  <title>
+    Redis网络模型 |
+    
+    改bug的龙哥的博客
+  </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin><link rel="preload" as="style" href="https://fonts.googleapis.com/css?family=Mulish:400,400italic,700,700italic%7CNoto%20Serif%20SC:400,400italic,700,700italic&display=swap"><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Mulish:400,400italic,700,700italic%7CNoto%20Serif%20SC:400,400italic,700,700italic&display=swap" media="print" onload="this.media&#x3D;&#39;all&#39;">
+  
+    <link rel="preload" href="//at.alicdn.com/t/c/font_4552607_tq6stt6tcg.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  
+  
+    
+<link rel="stylesheet" href="/css/loader.css">
+
+  
+  
+    <meta name="description" content="8.2 Redis网络模型8.2.1 用户空间和内核空间用户空间和内核空间：以Linux为例，内核都是Linux  操作系统需要消耗一定的内核资源 为了避免用户应用导致冲突甚至内核崩溃，用户应用与内核是分离的。 进程的寻址空间会划分为内核空间和用户空间  用户空间只能执行受限命令，而且不能直接调用系统资源，必须通过内核提供接口来访问 内核空间可以执行特权命令，执行系统的所有资源 LiuX系统为了提">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis网络模型">
+<meta property="og:url" content="http://example.com/2024/12/02/Redis%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/index.html">
+<meta property="og:site_name" content="改bug的龙哥的博客">
+<meta property="og:description" content="8.2 Redis网络模型8.2.1 用户空间和内核空间用户空间和内核空间：以Linux为例，内核都是Linux  操作系统需要消耗一定的内核资源 为了避免用户应用导致冲突甚至内核崩溃，用户应用与内核是分离的。 进程的寻址空间会划分为内核空间和用户空间  用户空间只能执行受限命令，而且不能直接调用系统资源，必须通过内核提供接口来访问 内核空间可以执行特权命令，执行系统的所有资源 LiuX系统为了提">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412091829934.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412091829916.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412091829929.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412091829008.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412091829937.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412091829946.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412091829571.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412091829693.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412091829870.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412091829042.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412091829301.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412091829455.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412091829644.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412091829752.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412091829116.png">
+<meta property="og:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412091829241.png">
+<meta property="article:published_time" content="2024-12-02T13:23:00.000Z">
+<meta property="article:modified_time" content="2024-12-09T10:31:24.913Z">
+<meta property="article:author" content="改bug的龙哥">
+<meta property="article:tag" content="Redis网络模型">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412091829934.png">
+  
+  
+    <link rel="alternate" href="/atom.xml" title="改bug的龙哥的博客" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/images/favicon.ico">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  <link rel="preload" href="https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  
+  
+  
+  
+    
+<script src="https://npm.webcache.cn/pace-js@1.2.4/pace.min.js" integrity="sha384-k6YtvFUEIuEFBdrLKJ3YAUbBki333tj1CSUisai5Cswsg9wcLNaPzsTHDswp4Az8" crossorigin="anonymous"></script>
+
+  
+  
+    
+<link rel="stylesheet" href="https://npm.webcache.cn/@reimujs/aos@0.1.0/dist/aos.css">
+
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+  <body>
+    
+  <div id='loader'>
+    <div class="loading-left-bg loading-bg"></div>
+    <div class="loading-right-bg loading-bg"></div>
+    <div class="spinner-box">
+      <div class="loading-taichi">
+        <svg width="150" height="150" viewBox="0 0 1024 1024" class="icon" version="1.1" xmlns="https://www.w3.org/2000/svg" shape-rendering="geometricPrecision">
+          <path d="M303.5 432A80 80 0 0 1 291.5 592A80 80 0 0 1 303.5 432z" fill="#ff5252" />
+          <path d="M512 65A447 447 0 0 1 512 959L512 929A417 417 0 0 0 512 95A417 417 0 0 0 512 929L512 959A447 447 0 0 1 512 65z 
+         M512 95A417 417 0 0 1 929 512A208.5 208.5 0 0 1 720.5 720.5L720.5 592A80 80 0 0 0 720.5 432A80 80 0 0 0 720.5 592L720.5 720.5A208.5 208.5 0 0 1 512 512A208.5 208.5 0 0 0 303.5 303.5A208.5 208.5 0 0 0 95 512A417 417 0 0 1 512 95z" fill="#ff5252" />
+        </svg>
+      </div>
+      <div class="loading-word">少女祈祷中...</div>
+    </div>
+  </div>
+  </div>
+  <script>
+    var time = null;
+    var startLoading = () => {
+      time = Date.now();
+      document.getElementById('loader').classList.remove("loading");
+    }
+    var endLoading = () => {
+      if (!time) {
+        document.body.style.overflow = 'auto';
+        document.getElementById('loader').classList.add("loading");
+      } else {
+        if (Date.now() - time > 500) {
+          time = null;
+          document.body.style.overflow = 'auto';
+          document.getElementById('loader').classList.add("loading");
+        } else {
+          setTimeout(endLoading, 500 - (Date.now() - time));
+          time = null;
+        }
+      }
+    }
+    window.addEventListener('DOMContentLoaded', endLoading);
+    document.getElementById('loader').addEventListener('click', endLoading);
+  </script>
+
+<div id="copy-tooltip" style="pointer-events: none; opacity: 0; transition: all 0.2s ease; position: fixed;top: 50%;left: 50%;z-index: 999;transform: translate(-50%, -50%);color: white;background: rgba(0, 0, 0, 0.5);padding: 10px 15px;border-radius: 10px;">
+</div>
+
+
+    <div id="container">
+      <div id="wrap">
+        <div id="header-nav">
+  <nav id="main-nav">
+    
+      <span class="main-nav-link-wrap">
+        <div class="main-nav-icon icon-taichi"></div>
+        <a class="main-nav-link" href="/">首页</a>
+      </span>
+    
+      <span class="main-nav-link-wrap">
+        <div class="main-nav-icon icon-taichi"></div>
+        <a class="main-nav-link" href="/archives">归档</a>
+      </span>
+    
+      <span class="main-nav-link-wrap">
+        <div class="main-nav-icon icon-taichi"></div>
+        <a class="main-nav-link" href="/about">关于</a>
+      </span>
+    
+      <span class="main-nav-link-wrap">
+        <div class="main-nav-icon icon-taichi"></div>
+        <a class="main-nav-link" href="/friend">友链</a>
+      </span>
+    
+    <a id="main-nav-toggle" class="nav-icon"></a>
+  </nav>
+  <nav id="sub-nav">
+    
+      <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS 订阅" target="_blank"></a>
+    
+    
+    
+  </nav>
+</div>
+<header id="header">
+  
+    
+      <img fetchpriority="high" src="/images/banner.webp" alt="Redis网络模型">
+    
+  
+  <div id="header-outer">
+    <div id="header-title">
+      
+        
+        
+          <a href="/" id="logo">
+            <h1 data-aos="slide-up">Redis网络模型</h1>
+          </a>
+        
+      
+      
+        
+        <h2 id="subtitle-wrap" data-aos="slide-down">
+          
+        </h2>
+      
+    </div>
+  </div>
+</header>
+
+        <div id="content">
+          
+          <section id="main"><article id="post-Redis网络模型" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-inner" data-aos="fade-up">
+    <div class="article-meta">
+      <div class="article-date">
+  <a href="/2024/12/02/Redis%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" class="article-date-link" data-aos="zoom-in">
+    <time datetime="2024-12-02T13:23:00.000Z" itemprop="datePublished">2024-12-02</time>
+    <time style="display: none;" id="post-update-time">2024-12-09</time>
+  </a>
+</div>
+
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Redis/" data-aos="zoom-in">Redis</a>
+  </div>
+
+
+    </div>
+    <div class="hr-line"></div>
+    
+
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+      
+        <h1 id="8-2-Redis网络模型"><a href="#8-2-Redis网络模型" class="headerlink" title="8.2 Redis网络模型"></a>8.2 Redis网络模型</h1><h2 id="8-2-1-用户空间和内核空间"><a href="#8-2-1-用户空间和内核空间" class="headerlink" title="8.2.1 用户空间和内核空间"></a>8.2.1 用户空间和内核空间</h2><p>用户空间和内核空间：以Linux为例，内核都是Linux</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412091829934.png" alt="image-20241209103754508"></p>
+<p>操作系统需要消耗一定的内核资源</p>
+<p>为了避免用户应用导致冲突甚至内核崩溃，用户应用与内核是分离的。</p>
+<p>进程的寻址空间会划分为内核空间和用户空间</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412091829916.png" alt="image-20241209104059334"></p>
+<p>用户空间只能执行受限命令，而且不能直接调用系统资源，必须通过内核提供接口来访问</p>
+<p>内核空间可以执行特权命令，执行系统的所有资源</p>
+<p>LiuX系统为了提高I&#x2F;O效率，会在用户空间和内核空间都加入缓冲区：<br>●写数据时，要把用户缓冲数据拷贝到内核缓冲区，然后写入设备<br>●读数据时，要从设备读取数据到内核缓冲区，然后拷贝到用户缓冲区</p>
+<h2 id="8-2-2-阻塞IO"><a href="#8-2-2-阻塞IO" class="headerlink" title="8.2.2 阻塞IO"></a>8.2.2 阻塞IO</h2><p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412091829929.png" alt="image-20241209104515005"></p>
+<p>阻塞IO(BlockingIO)<br>非阻塞IO(Nonblocking IO)<br>IO多路复用(IO Multiplexing)<br>信号驱动IO(Signal Driven IO)<br>异步IO(Asynchronous IO)</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412091829008.png" alt="image-20241209104652679"></p>
+<p>用户内核都是阻塞态</p>
+<h2 id="8-2-3-非阻塞IO"><a href="#8-2-3-非阻塞IO" class="headerlink" title="8.2.3 非阻塞IO"></a>8.2.3 非阻塞IO</h2><p>非阻塞IO的recvfrom操作会立即返回结果而不是阻塞用户进程。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412091829937.png" alt="image-20241209104856905"></p>
+<p>可以看到，非阻塞IO模型中，用户进程在第一个阶段是非阻塞的，第二个阶段是阻塞的。虽然是非阻塞，但是性能并没有得到提高。而且忙等机制会导致cpu空转，cpu的使用率暴增。</p>
+<h2 id="8-2-4-多路复用IO"><a href="#8-2-4-多路复用IO" class="headerlink" title="8.2.4 多路复用IO"></a>8.2.4 多路复用IO</h2><p>无论是阻寒IO还是非阻寒IO,用户应用在一阶段都需要调用recvfrom来获取数据，差别在于无数据时的处理方案：<br>如果调用recvfrom时，恰好设有数据，阻寒IO会使进程阻塞，非阻寒IO使CPU空转，都不能充分发挥CPU的作用。<br>如果调用recvfrom时，恰好有数据，则用户进程可以直接进入第二阶段，读取并处理数据</p>
+<p>比如服务端处理客户端Socket请求时，在单线程情况下，只能依次处理每一个socket,如果正在处理的socket恰好未就绪（数据不可读或不可写)，线程就会被阻塞，所有其它客户端s0ckt都必须等待，性能自然会很差。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412091829946.png" alt="image-20241209105716259"></p>
+<p>要提高效率有几种办法？<br>√方案一：增加更多服务员（多线程）<br>√方案二：不排队，谁想好了吃什么（数据就绪了），服务员就给谁点餐（用户应用就去读取数据）</p>
+<p>文件描述符：从0开始递增的无符号整数，用来关联Linux中的一个文件，在Linux中，一切皆文件。例如常规文件、视频、硬件设备等，当然也包括网络套接字(Socket)。</p>
+<p>IO多路复用：是利用单个线程来同时监听多个FD,并在某个FD可读、可写时得到通知，从而避免无效的等待，充分利用CPU资源。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412091829571.png" alt="image-20241209110119531"></p>
+<p>监听模式：select、poll、epoll</p>
+<p>差异：<br>◆select和poll只会通知用户进程有FD就绪，但不确定具体是哪个FD,需要用户进程逐个遍历FD来确认<br>◆epoll则会在通知用户进程FD就绪的同时，把已就绪的FD写入用户空间</p>
+<p>select是Linux中最早的多路IO复用方案</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412091829693.png" alt="image-20241209111339893"></p>
+<p>select模式存在的问题：<br>√需要将整个fd_set从用户空间拷贝到内核空闻，select结束还要再次拷贝留用户空间<br>√select无法得知具体哪个fd就绪。需要遍历整个fd_set<br>√fd_set监听的fd数量不能超过1024</p>
+<p>poll：对select进行简单改进，但是性能提升不明显</p>
+<p>创建pollfd数组，向其中添加关注的fd信息，数组大小自定义<br>调用pol函数，将pofd数组拷贝到内核空间，转链表存储，无上限<br>内核追历fd,判断是否就绪<br>数据就绪或超时后，拷贝pollfd数组到用户空间，返回就绪fd数量n<br>用户进程判断n是否大于0<br>大于0则追历pollfd数组，找到就绪的fd</p>
+<p>与selecti对比：<br>select模式中的fd_set大小因定为1024，而oollfd:在内核中采用<br>链表，理论上无上限<br>,监听FD越多，每次追历消耗时间也越久，性能反而会下降</p>
+<p>epoll方法：</p>
+<p>对select，poll改进，它提供了三个函数：create、ctl、wait</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412091829870.png" alt="image-20241209112614039"></p>
+<p>select模式存在的三个问题：<br>●能监听的FD最大不超过1024<br>●每次select都需要把所有要监听的FD都拷贝到内核空间<br>●每次都要追历所有FD来判断就绪状态<br>poll模式的问题：<br>poll利用链表解决了select中监听FD上限的问题，但依然要遍历所有FD,如果监听较多，性能会下降<br>epoll模式中如何解决这些问题的？<br>基于epoll实例中的红黑树保存要监听的FD,理论上无上限，而且增删改查效率都非常高，性能不会随监听的FD数量增多而下降</p>
+<p>每个FD只需要执行一次epoll_ctl添加到红黑树，以后每次epol_wait无需传递任何参数，无需重复拷贝FD到内核空间<br>内核会将就绪的FD直接拷贝到用户空间的指定位置，用户进程无需遍历所有FD就能知道就绪的FD是谁</p>
+<p>事件通知机制：</p>
+<p>LevelTriggered:简称LT。当FD有数据可读时，会重复通知多次，直至数据处理完成。是Epol的默认模式。<br>EdgeTriggered:简称ET。当FD有数据可读时，只会被通知一次，不管数据是否处理完成。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412091829042.png" alt="image-20241209113711457"></p>
+<p>结论：<br>ET模式避免了LT模式可能出现的惊群现象<br>ET模式最好结合非阻塞IO读取FD数据，相比LT会复杂一些</p>
+<p>web服务流程</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412091829301.png" alt="image-20241209115109775"></p>
+<h2 id="8-2-5-信号驱动IO和异步IO"><a href="#8-2-5-信号驱动IO和异步IO" class="headerlink" title="8.2.5 信号驱动IO和异步IO"></a>8.2.5 信号驱动IO和异步IO</h2><p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412091829455.png" alt="image-20241209115302156"></p>
+<p>当有大量IO操作时，信号较多，SIGIO处理函数不能及时处理可能导致信号队列溢出，而且内核空间与用户空间的颜繁信号交互性能也较低。</p>
+<p>异步IO</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412091829644.png" alt="image-20241209115537835"></p>
+<p>异步IO的整个过程都是非阻塞的，用户进程调用完异步AP叫后就可以去做其它事情，内核等待数据就绪并拷贝到用户空间后才会递交信号，通知用户进程。</p>
+<p>IO操作是同步还是异步，关键看数据在内核空间与用户空间的拷贝过程（数据读写的1O操作），也就是阶段是同步还是异步：</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412091829752.png" alt="image-20241209115743624"></p>
+<h2 id="8-2-6-Redis网络模型"><a href="#8-2-6-Redis网络模型" class="headerlink" title="8.2.6 Redis网络模型"></a>8.2.6 Redis网络模型</h2><p>redis是单线程or 多线程</p>
+<p>如果仅仅聊redis核心业务，是单线程；如果是整个redis，是多线程</p>
+<p>redis为什么选择单线程：</p>
+<p>抛开持久化不谈，Redis是纯内存操作，执行速度非常快，它的性能瓶颈是网络延逸而不是执行速度，因此多线程并不会带来巨大的性能提升。<br>多线程会导致过多的上下文切换，带来不必要的开销。<br>引入多线程会面临线程安全问题，必然要引入线程锁这样的安全手段，实现复杂度增高，而且性能也会大打折扣。</p>
+<p>redis通过IO多路复用来提高网络性能，并且支持各种不同的多路复用实验，并且将这些实现进行封装，提供统一的高性能事件库API库AE</p>
+<p>redis单线程网络</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412091829116.png" alt="image-20241209143355204"></p>
+<p>多线程：目的是提高IO读写效率，在解析客户端命令、写响应结果时采用了多线程。核心命令的执行、IO多路复用模块依然是由主线程执行的。</p>
+<p><img src="https://yyh-cqwm.oss-cn-hangzhou.aliyuncs.com/blog/202412091829241.png" alt="image-20241209144359392"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+      
+      
+      
+      
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item" data-aos="zoom-in"><a class="article-tag-list-link" href="/tags/Redis%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" rel="tag">Redis网络模型</a></li></ul>
+
+
+    </footer>
+  </div>
+  
+  <nav id="article-nav" data-aos="fade-up">
+    
+      <div class="article-nav-link-wrap article-nav-link-left">
+        
+          
+          
+            <img data-src="/images/banner.webp" data-sizes="auto" alt="Redis数据结构" class="lazyload">
+          
+        
+        <a href="/2024/12/02/Redis%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/"></a>
+        <div class="article-nav-caption">前一篇</div>
+        <h3 class="article-nav-title">
+          
+            Redis数据结构
+          
+        </h3>
+      </div>
+    
+    
+    <div class="article-nav-link-wrap article-nav-link-right">
+      
+        
+        
+          <img data-src="/images/banner.webp" data-sizes="auto" alt="Java虚拟机类加载器" class="lazyload">
+        
+      
+      <a href="/2024/12/01/%E8%99%9A%E6%8B%9F%E6%9C%BA%E4%B9%8B%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8/"></a>
+      <div class="article-nav-caption">后一篇</div>
+      <h3 class="article-nav-title">
+        
+          Java虚拟机类加载器
+        
+      </h3>
+    </div>
+    
+  </nav>
+
+
+</article>
+
+
+
+
+
+
+</section>
+          
+            <aside id="sidebar">
+  <div class="sidebar-wrapper wrap-sticky">
+    <div class="sidebar-wrap" data-aos="fade-up">
+      
+        <div class="sidebar-toc-sidebar"><div class="sidebar-toc">
+  <h3 class="toc-title">文章目录</h3>
+  <div class="sidebar-toc-wrapper toc-div-class" >
+      
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#8-2-Redis%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B"><span class="toc-number">1.</span> <span class="toc-text">8.2 Redis网络模型</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#8-2-1-%E7%94%A8%E6%88%B7%E7%A9%BA%E9%97%B4%E5%92%8C%E5%86%85%E6%A0%B8%E7%A9%BA%E9%97%B4"><span class="toc-number">1.1.</span> <span class="toc-text">8.2.1 用户空间和内核空间</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-2-2-%E9%98%BB%E5%A1%9EIO"><span class="toc-number">1.2.</span> <span class="toc-text">8.2.2 阻塞IO</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-2-3-%E9%9D%9E%E9%98%BB%E5%A1%9EIO"><span class="toc-number">1.3.</span> <span class="toc-text">8.2.3 非阻塞IO</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-2-4-%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8IO"><span class="toc-number">1.4.</span> <span class="toc-text">8.2.4 多路复用IO</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-2-5-%E4%BF%A1%E5%8F%B7%E9%A9%B1%E5%8A%A8IO%E5%92%8C%E5%BC%82%E6%AD%A5IO"><span class="toc-number">1.5.</span> <span class="toc-text">8.2.5 信号驱动IO和异步IO</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-2-6-Redis%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B"><span class="toc-number">1.6.</span> <span class="toc-text">8.2.6 Redis网络模型</span></a></li></ol></li></ol>
+      
+  </div>
+</div>
+</div>
+        <div class="sidebar-common-sidebar hidden"><div class="sidebar-author">
+  <img data-src="/avatar/avatar.webp" data-sizes="auto" alt="改bug的龙哥" class="lazyload">
+  <div class="sidebar-author-name">改bug的龙哥</div>
+  <div class="sidebar-description"></div>
+</div>
+<div class="sidebar-state">
+  <div class="sidebar-state-article">
+    <div>文章</div>
+    <div class="sidebar-state-number">12</div>
+  </div>
+  <div class="sidebar-state-category">
+    <div>分类</div>
+    <div class="sidebar-state-number">3</div>
+  </div>
+  <div class="sidebar-state-tag">
+    <div>标签</div>
+    <div class="sidebar-state-number">8</div>
+  </div>
+</div>
+<div class="sidebar-social">
+  
+</div>
+<div class="sidebar-menu">
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/" aria-label="首页"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">首页</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/archives" aria-label="归档"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">归档</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/about" aria-label="关于"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">关于</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/friend" aria-label="友链"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">友链</div>
+    </div>
+  
+</div>
+</div>
+      
+      
+        <div class="sidebar-btn-wrapper" style="position:static">
+          <div class="sidebar-toc-btn current"></div>
+          <div class="sidebar-common-btn"></div>
+        </div>
+      
+    </div>
+  </div>
+
+  
+</aside>
+
+          
+        </div>
+        <footer id="footer">
+  <div style="width: 100%; overflow: hidden">
+    <div class="footer-line"></div>
+  </div>
+  <div id="footer-info">
+    
+    <div>
+      <span class="icon-copyright"></span>
+      2020-2024
+      <span class="footer-info-sep"></span>
+      改bug的龙哥
+    </div>
+    
+      <div>
+        基于&nbsp;<a href="https://hexo.io/" rel="noopener external nofollow noreferrer" target="_blank">Hexo</a>&nbsp;
+        Theme.<a href="https://github.com/D-Sketon/hexo-theme-reimu" rel="noopener external nofollow noreferrer" target="_blank">Reimu</a>
+      </div>
+    
+    
+      <div>
+        <span class="icon-brush"></span>
+        24.1k
+        &nbsp;|&nbsp;
+        <span class="icon-coffee"></span>
+        01:18
+      </div>
+    
+    
+    
+    
+      <div>
+        <span class="icon-eye"></span>
+        <span id="busuanzi_container_site_pv">总访问量&nbsp;<span id="busuanzi_value_site_pv"></span></span>
+        &nbsp;|&nbsp;
+        <span class="icon-user"></span>
+        <span id="busuanzi_container_site_uv">总访客量&nbsp;<span id="busuanzi_value_site_uv"></span></span>
+      </div>
+    
+  </div>
+</footer>
+
+        <div class="sidebar-top">
+          <img src="/images/taichi.png" height="50" width="50" alt="backtop" />
+          <div class="arrow-up"></div>
+        </div>
+        <div id="mask"></div>
+      </div>
+      <nav id="mobile-nav">
+  <div class="sidebar-wrap">
+    
+      <div class="sidebar-toc-sidebar"><div class="sidebar-toc">
+  <h3 class="toc-title">文章目录</h3>
+  <div class="sidebar-toc-wrapper toc-div-class" >
+      
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#8-2-Redis%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B"><span class="toc-number">1.</span> <span class="toc-text">8.2 Redis网络模型</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#8-2-1-%E7%94%A8%E6%88%B7%E7%A9%BA%E9%97%B4%E5%92%8C%E5%86%85%E6%A0%B8%E7%A9%BA%E9%97%B4"><span class="toc-number">1.1.</span> <span class="toc-text">8.2.1 用户空间和内核空间</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-2-2-%E9%98%BB%E5%A1%9EIO"><span class="toc-number">1.2.</span> <span class="toc-text">8.2.2 阻塞IO</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-2-3-%E9%9D%9E%E9%98%BB%E5%A1%9EIO"><span class="toc-number">1.3.</span> <span class="toc-text">8.2.3 非阻塞IO</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-2-4-%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8IO"><span class="toc-number">1.4.</span> <span class="toc-text">8.2.4 多路复用IO</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-2-5-%E4%BF%A1%E5%8F%B7%E9%A9%B1%E5%8A%A8IO%E5%92%8C%E5%BC%82%E6%AD%A5IO"><span class="toc-number">1.5.</span> <span class="toc-text">8.2.5 信号驱动IO和异步IO</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-2-6-Redis%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B"><span class="toc-number">1.6.</span> <span class="toc-text">8.2.6 Redis网络模型</span></a></li></ol></li></ol>
+      
+  </div>
+</div>
+</div>
+      <div class="sidebar-common-sidebar hidden"><div class="sidebar-author">
+  <img data-src="/avatar/avatar.webp" data-sizes="auto" alt="改bug的龙哥" class="lazyload">
+  <div class="sidebar-author-name">改bug的龙哥</div>
+  <div class="sidebar-description"></div>
+</div>
+<div class="sidebar-state">
+  <div class="sidebar-state-article">
+    <div>文章</div>
+    <div class="sidebar-state-number">12</div>
+  </div>
+  <div class="sidebar-state-category">
+    <div>分类</div>
+    <div class="sidebar-state-number">3</div>
+  </div>
+  <div class="sidebar-state-tag">
+    <div>标签</div>
+    <div class="sidebar-state-number">8</div>
+  </div>
+</div>
+<div class="sidebar-social">
+  
+</div>
+<div class="sidebar-menu">
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/" aria-label="首页"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">首页</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/archives" aria-label="归档"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">归档</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/about" aria-label="关于"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">关于</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/friend" aria-label="友链"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">友链</div>
+    </div>
+  
+</div>
+</div>
+    
+  </div>
+  
+    <div class="sidebar-btn-wrapper">
+      <div class="sidebar-toc-btn current"></div>
+      <div class="sidebar-common-btn"></div>
+    </div>
+  
+</nav>
+
+    </div>
+    
+    
+<script src="https://npm.webcache.cn/lazysizes@5.3.2/lazysizes.min.js" integrity="sha384-3gT&#x2F;vsepWkfz&#x2F;ff7PpWNUeMzeWoH3cDhm&#x2F;A8jM7ouoAK0&#x2F;fP&#x2F;9bcHHR5kHq2nf+e" crossorigin="anonymous"></script>
+
+
+<script src="https://npm.webcache.cn/clipboard@2.0.11/dist/clipboard.min.js" integrity="sha384-J08i8An&#x2F;QeARD9ExYpvphB8BsyOj3Gh2TSh1aLINKO3L0cMSH2dN3E22zFoXEi0Q" crossorigin="anonymous"></script>
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+  
+<script src="/js/aos.js"></script>
+
+  <script>
+    var aosInit = () => {
+      AOS.init({
+        duration: 1000,
+        easing: "ease",
+        once: true,
+        offset: 50,
+      });
+    };
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', aosInit);
+    } else {
+      aosInit();
+    }
+  </script>
+
+
+
+<script src="/js/pjax_script.js" data-pjax></script>
+
+
+
+
+
+
+
+  
+<script src="https://npm.webcache.cn/mouse-firework@0.0.6/dist/index.umd.js" integrity="sha384-vkGvf25gm1C1PbcoD5dNfc137HzNL&#x2F;hr1RKA5HniJOaawtvUmH5lTVFgFAruE9Ge" crossorigin="anonymous"></script>
+
+  <script>
+    window.firework && window.firework(JSON.parse('{"excludeElements":["a","button"],"particles":[{"shape":"circle","move":["emit"],"easing":"easeOutExpo","colors":["#ff5252","#ff7c7c","#ffafaf","#ffd0d0"],"number":20,"duration":[1200,1800],"shapeOptions":{"radius":[16,32],"alpha":[0.3,0.5]}},{"shape":"circle","move":["diffuse"],"easing":"easeOutExpo","colors":["#ff0000"],"number":1,"duration":[1200,1800],"shapeOptions":{"radius":20,"alpha":[0.2,0.5],"lineWidth":6}}]}'))
+  </script>
+
+
+
+
+
+
+
+
+<div id="lazy-script">
+  <div>
+    
+    
+      
+        
+<script src="/js/insert_highlight.js" data-pjax></script>
+
+      
+    
+    
+      <script type="module" data-pjax>
+        const PhotoSwipeLightbox = (await safeImport("https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe-lightbox.esm.min.js", "sha384-DiL6M/gG+wmTxmCRZyD1zee6lIhawn5TGvED0FOh7fXcN9B0aZ9dexSF/N6lrZi/")).default;
+        
+        const pswp = () => {
+          if (_$$('.article-entry a.article-gallery-item').length > 0) {
+            new PhotoSwipeLightbox({
+              gallery: '.article-entry',
+              children: 'a.article-gallery-item',
+              pswpModule: () => safeImport("https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe.esm.min.js", "sha384-WkkO3GCmgkC3VQWpaV8DqhKJqpzpF9JoByxDmnV8+oTJ7m3DfYEWX1fu1scuS4+s")
+            }).init();
+          }
+          if(_$$('.article-gallery a.article-gallery-item').length > 0) {
+            new PhotoSwipeLightbox({
+              gallery: '.article-gallery',
+              children: 'a.article-gallery-item',
+              pswpModule: () => safeImport("https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe.esm.min.js", "sha384-WkkO3GCmgkC3VQWpaV8DqhKJqpzpF9JoByxDmnV8+oTJ7m3DfYEWX1fu1scuS4+s")
+            }).init();
+          }
+          window.lightboxStatus = 'done';
+          window.removeEventListener('lightbox:ready', pswp);
+        }
+        if(window.lightboxStatus === 'ready') {
+          pswp()
+        } else {
+          window.addEventListener('lightbox:ready', pswp);
+        }
+      </script>
+      
+
+
+
+
+
+
+
+
+    
+  </div>
+</div>
+
+
+  <script>
+    console.log(String.raw`%c 
+ ______     ______     __     __    __     __  __    
+/\  == \   /\  ___\   /\ \   /\ "-./  \   /\ \/\ \   
+\ \  __<   \ \  __\   \ \ \  \ \ \-./\ \  \ \ \_\ \  
+ \ \_\ \_\  \ \_____\  \ \_\  \ \_\ \ \_\  \ \_____\ 
+  \/_/ /_/   \/_____/   \/_/   \/_/  \/_/   \/_____/ 
+                                                  
+`,'color: #ff5252;')
+    console.log('%c Theme.Reimu v' + '0.3.5' + ' %c https://github.com/D-Sketon/hexo-theme-reimu ', 'color: white; background: #ff5252; padding:5px 0;', 'padding:4px;border:1px solid #ff5252;')
+  </script>
+  
+
+
+
+  
+<script src="https://npm.webcache.cn/busuanzi@2.3.0/bsz.pure.mini.js" integrity="sha384-0M75wtSkhjIInv4coYlaJU83+OypaRCIq2SukQVQX04eGTCBXJDuWAbJet56id+S" crossorigin="anonymous" async></script>
+
+
+
+
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      for (let registration of registrations) {
+        registration.unregister();
+      }
+    });
+  }
+</script>
+
+  </body>
+  </html>
+
